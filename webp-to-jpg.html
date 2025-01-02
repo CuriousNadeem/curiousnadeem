@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  </head>
+  <body>
+    <div style="width: 90%; max-width: 1600px; margin: auto">
+      <!-- Add an upload button -->
+      <button
+        id="uploadButton"
+        style="display: block; margin: 0 auto; padding: 10px 20px; background-color: rgba(165, 0, 87, 0.6); color: #fff; border: none; border-radius: 17px; cursor: pointer;"
+      >
+        Upload Images
+      </button>
+
+      <p>You can only upload 300 files at one time</p>
+
+      <p>Max File size is 100MB.</p>
+
+      <!-- Add the drag and drop area -->
+      <div
+        id="dropArea"
+        style="border: 2px groove #ccc; padding: 70px; text-align: center; cursor: pointer;"
+      >
+        <p>Drag and drop WebP images here</p>
+      </div>
+
+      <!-- Display selected image names with line breaks -->
+      <div style="padding-top: 5px" id="selectedImages"></div>
+      <div id="imageCount" style="text-align: center; margin-top: 10px"></div>
+      <input
+        type="file"
+        id="fileInput"
+        accept=".webp"
+        multiple
+        style="display: none"
+      />
+      <div id="sizeExceededMessage" style="color: red; display: none"></div>
+
+      <button id="convertButton" onclick="convertImages()">Convert</button>
+      <div style="padding-top: 5px" id="downloadLinks"></div>
+
+      <!-- Add a download button -->
+      <button
+        id="downloadAllButton"
+        style="display: none; margin-top: 10px; padding: 10px 20px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer;"
+        onclick="downloadAllImages()"
+      >
+        Download All Converted Images
+      </button>
+
+      <!-- Add a clear button -->
+      <button
+        id="clearButton"
+        style="display: none; margin-top: 10px; padding: 10px 20px; background-color: #ff5733; color: #fff; border: none; border-radius: 4px; cursor: pointer;"
+        onclick="clearPage()"
+      >
+        Clear
+      </button>
+    </div>
+
+    <script>
+      const dropArea = document.getElementById("dropArea");
+      const uploadButton = document.getElementById("uploadButton");
+      const imageCount = document.getElementById("imageCount");
+      const fileInput = document.getElementById("fileInput");
+      const selectedImages = document.getElementById("selectedImages");
+      const downloadAllButton = document.getElementById("downloadAllButton");
+      const clearButton = document.getElementById("clearButton");
+
+      // Keep track of successfully converted images
+      const successfullyConvertedImages = [];
+
+      // Prevent the browser's default behavior for file drop
+      dropArea.addEventListener("dragover", function (e) {
+        e.preventDefault();
+      });
+
+      // Handle file drop event
+      dropArea.addEventListener("drop", function (e) {
+        e.preventDefault();
+        const files = e.dataTransfer.files;
+        fileInput.files = files;
+        displaySelectedImages(files);
+      });
+
+      // Handle file selection using the file input
+      fileInput.addEventListener("change", function () {
+        const files = fileInput.files;
+        displaySelectedImages(files);
+      });
+
+      // Trigger the file input when the "Upload Images" button is clicked
+      uploadButton.addEventListener("click", function () {
+        fileInput.click();
+      });
+
+      function displaySelectedImages(files) {
+        // Clear previously selected images
+        selectedImages.innerHTML = "";
+        imageCount.innerHTML = "";
+
+        // Check if no images are selected
+        if (files.length === 0) {
+          alert("No images selected.");
+          return;
+        }
+
+        // Display selected image names with line breaks
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          const imageName = document.createElement("div");
+          imageName.textContent = file.name;
+          selectedImages.appendChild(imageName);
+        }
+        imageCount.textContent = `Selected ${files.length} image(s)`;
+      }
+
+      function convertImages() {
+        const fileInput = document.getElementById("fileInput");
+        const downloadLinks = document.getElementById("downloadLinks");
+        const sizeExceededMessage = document.getElementById("sizeExceededMessage");
+        sizeExceededMessage.style.display = "none";
+        downloadLinks.innerHTML = "";
+
+        if (fileInput.files.length > 300) {
+          alert("You can select a maximum of 300 files.");
+          return;
+        }
+
+        let convertedCount = 0;
+
+        for (let i = 0; i < fileInput.files.length; i++) {
+          const file = fileInput.files[i];
+
+          if (file.size > 100 * 1024 * 1024) {
+            sizeExceededMessage.textContent =
+              "File size exceeded the 100MB limit.";
+            sizeExceededMessage.style.display = "block";
+          } else {
+            const reader = new FileReader();
+
+            reader.onload = function () {
+              const img = new Image();
+              img.src = reader.result;
+
+              img.onload = function () {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                canvas.toBlob(
+                  function (blob) {
+                    // Add the converted file to the successful list
+                    successfullyConvertedImages.push({
+                      name: file.name.replace(".webp", ".jpg"),
+                      blob: blob,
+                    });
+
+                    convertedCount++;
+                    if (convertedCount === fileInput.files.length) {
+                      alert("Conversion completed.");
+                      // Show the download all and clear buttons when conversion is complete
+                      downloadAllButton.style.display = "block";
+                      clearButton.style.display = "block";
+                    }
+                  },
+                  "image/jpeg",
+                  0.9
+                ); // Change format to JPG
+              };
+            };
+            reader.readAsDataURL(file);
+          }
+        }
+      }
+
+      function downloadAllImages() {
+        const zip = new JSZip();
+
+        // Add all the converted images to the zip
+        successfullyConvertedImages.forEach(function (image) {
+          zip.file(image.name, image.blob);
+        });
+
+        // Generate the zip file and trigger the download
+        zip.generateAsync({ type: "blob" }).then(function (content) {
+          saveAs(content, "converted_images.zip");
+        });
+      }
+
+      function clearPage() {
+        // Clear selected images, download links, and hide buttons
+        selectedImages.innerHTML = "";
+        downloadLinks.innerHTML = "";
+        imageCount.innerHTML = "";
+        downloadAllButton.style.display = "none";
+        clearButton.style.display = "none";
+        successfullyConvertedImages.length = 0;
+        fileInput.value = "";
+      }
+    </script>
+  </body>
+</html>
