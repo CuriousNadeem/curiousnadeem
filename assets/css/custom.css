@@ -1,0 +1,30 @@
+.pricing-switch {
+    display: inline-flex;
+    align-items: center;
+}
+.price-toggle {
+    cursor: pointer;
+}
+.static-pricing {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+.dynamic-pricing {
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.static-pricing:hover,
+.dynamic-pricing:hover {
+    color: var(--primary_color);
+}
+.price-toggle.active {
+    color: var(--primary_color);
+}
+.package-name {
+    color: #999999;
+    font-size: 18px;
+}
+.feature-lists {
+    list-style: disc;
+}
