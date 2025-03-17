@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tag Input List</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        #inputBox {
+            width: 50%;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+            border: 2px solid #333;
+            border-radius: 5px;
+            outline: none;
+        }
+        #tagsContainer {
+            margin-top: 20px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 60%;
+        }
+        .tag {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 3px;
+        }
+        #clearButton {
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #clearButton:hover {
+            background: darkred;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="inputBox" placeholder="Enter tags or titles separated by commas and press Enter">
+    <div id="tagsContainer"></div>
+    <button id="clearButton">Clear Tags</button>
+
+    <script>
+        let tagCounter = 1;
+        const inputBox = document.getElementById("inputBox");
+        const tagsContainer = document.getElementById("tagsContainer");
+        const clearButton = document.getElementById("clearButton");
+
+        inputBox.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                const tags = inputBox.value.split(",").map(tag => tag.trim()).filter(tag => tag);
+                inputBox.value = "";
+                tags.forEach(tag => {
+                    const span = document.createElement("span");
+                    span.classList.add("tag");
+                    span.id = `t_${tagCounter++}`;
+                    span.textContent = tag;
+                    tagsContainer.appendChild(span);
+                });
+            }
+        });
+
+        clearButton.addEventListener("click", function() {
+            tagsContainer.innerHTML = "";
+            tagCounter = 1;
+        });
+    </script>
+</body>
+</html>
