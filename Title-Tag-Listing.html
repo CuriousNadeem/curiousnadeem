@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tag Input List</title>
+    <title>Tag and Title Input List</title>
     <style>
         body {
             display: flex;
@@ -14,7 +14,7 @@
             background-color: #f4f4f4;
             font-family: Arial, sans-serif;
         }
-        #inputBox {
+        #inputBox, #titleInputBox {
             width: 50%;
             padding: 10px;
             font-size: 18px;
@@ -22,8 +22,9 @@
             border: 2px solid #333;
             border-radius: 5px;
             outline: none;
+            margin-bottom: 10px;
         }
-        #tagsContainer {
+        .container {
             margin-top: 20px;
             padding: 10px;
             background: white;
@@ -32,58 +33,122 @@
             text-align: center;
             width: 60%;
         }
-        .tag {
+        .tag, .title {
             display: inline-block;
             background: #007bff;
             color: white;
-            padding: 5px 10px;
-            margin: 5px;
+            padding: 2px 5px;
+            margin: 3px;
             border-radius: 3px;
+            font-size: 10px; /* Smallest readable font size */
         }
-        #clearButton {
-            margin-top: 15px;
-            padding: 10px 20px;
-            font-size: 16px;
-            background: red;
+        .button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 14px;
+            background: green;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
         }
-        #clearButton:hover {
+        .button:hover {
+            background: darkgreen;
+        }
+        #clearButton, #clearTitleButton {
+            background: red;
+        }
+        #clearButton:hover, #clearTitleButton:hover {
             background: darkred;
         }
     </style>
 </head>
 <body>
-    <input type="text" id="inputBox" placeholder="Enter tags or titles separated by commas and press Enter">
-    <div id="tagsContainer"></div>
-    <button id="clearButton">Clear Tags</button>
+    <input type="text" id="inputBox" placeholder="Enter tags separated by commas and press Submit">
+    <div class="container" id="tagsContainer"></div>
+    <button class="button" id="submitTags">Submit</button>
+    <button class="button" id="clearButton">Clear Tags</button>
+    
+    <input type="text" id="titleInputBox" placeholder="Enter titles separated by dots and press Submit">
+    <div class="container" id="titlesContainer"></div>
+    <button class="button" id="submitTitles">Submit</button>
+    <button class="button" id="clearTitleButton">Clear Titles</button>
+
+    <p id="maintags">png, tumbler, Tumbler Wrap, Template, 20oz, 20 oz tumbler, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, Women's Day, Women’s International Day, mothers day, baseball, spring, mama, flowers, wedding, st patricks day, Tumbler Design, Women, easter, bunny, teacher, mom, horse, heart, cat, love, stickers, svg, nurse, christian, vintage, retro, canva, women day, typography, mardi gras, cute, kawai,</p>
+    <button class="button" id="copyButton">Copy Text</button>
 
     <script>
         let tagCounter = 1;
+        let titleCounter = 1;
         const inputBox = document.getElementById("inputBox");
         const tagsContainer = document.getElementById("tagsContainer");
+        const submitTags = document.getElementById("submitTags");
         const clearButton = document.getElementById("clearButton");
+        const titleInputBox = document.getElementById("titleInputBox");
+        const titlesContainer = document.getElementById("titlesContainer");
+        const submitTitles = document.getElementById("submitTitles");
+        const clearTitleButton = document.getElementById("clearTitleButton");
+        const copyButton = document.getElementById("copyButton");
+        const maintags = document.getElementById("maintags");
+
+        function processTags() {
+            const tags = inputBox.value.split(",").map(tag => tag.trim()).filter(tag => tag);
+            inputBox.value = "";
+            tags.forEach(tag => {
+                const span = document.createElement("span");
+                span.classList.add("tag");
+                span.id = `t_${tagCounter++}`;
+                span.textContent = tag;
+                tagsContainer.appendChild(span);
+            });
+        }
+
+        function processTitles() {
+            const titles = titleInputBox.value.split(".").map(title => title.trim()).filter(title => title);
+            titleInputBox.value = "";
+            titles.forEach(title => {
+                const span = document.createElement("span");
+                span.classList.add("title");
+                span.id = `title_${titleCounter++}`;
+                span.textContent = title;
+                titlesContainer.appendChild(span);
+            });
+        }
+
+        submitTags.addEventListener("click", processTags);
+        submitTitles.addEventListener("click", processTitles);
 
         inputBox.addEventListener("keypress", function(event) {
             if (event.key === "Enter") {
                 event.preventDefault();
-                const tags = inputBox.value.split(",").map(tag => tag.trim()).filter(tag => tag);
-                inputBox.value = "";
-                tags.forEach(tag => {
-                    const span = document.createElement("span");
-                    span.classList.add("tag");
-                    span.id = `t_${tagCounter++}`;
-                    span.textContent = tag;
-                    tagsContainer.appendChild(span);
-                });
+                processTags();
+            }
+        });
+
+        titleInputBox.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                processTitles();
             }
         });
 
         clearButton.addEventListener("click", function() {
             tagsContainer.innerHTML = "";
             tagCounter = 1;
+        });
+
+        clearTitleButton.addEventListener("click", function() {
+            titlesContainer.innerHTML = "";
+            titleCounter = 1;
+        });
+
+        copyButton.addEventListener("click", function() {
+            const text = maintags.innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                console.log("Text copied to clipboard!");
+            }).catch(err => {
+                console.error("Failed to copy text: ", err);
+            });
         });
     </script>
 </body>
