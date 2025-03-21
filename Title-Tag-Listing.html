@@ -64,15 +64,15 @@
     </style>
 </head>
 <body>
-    <input type="text" id="inputBox" placeholder="Enter tags separated by commas and press Submit">
+    <input type="text" id="inputBox" placeholder="Enter Titles separated by commas and press Submit">
     <div class="container" id="tagsContainer"></div>
     <button class="button" id="submitTags">Submit</button>
-    <button class="button" id="clearButton">Clear Tags</button>
+    <button class="button" id="clearButton">Clear Titles</button>
     
-    <input type="text" id="titleInputBox" placeholder="Enter titles separated by dots and press Submit">
+    <input type="text" id="titleInputBox" placeholder="Enter Tags separated by dots and press Submit">
     <div class="container" id="titlesContainer"></div>
     <button class="button" id="submitTitles">Submit</button>
-    <button class="button" id="clearTitleButton">Clear Titles</button>
+    <button class="button" id="clearTitleButton">Clear Tags</button>
 
     <p id="maintags">png, tumbler, Tumbler Wrap, Template, 20oz, 20 oz tumbler, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, Women's Day, Women’s International Day, mothers day, baseball, spring, mama, flowers, wedding, st patricks day, Tumbler Design, Women, easter, bunny, teacher, mom, horse, heart, cat, love, stickers, svg, nurse, christian, vintage, retro, canva, women day, typography, mardi gras, cute, kawai,</p>
     <button class="button" id="copyButton">Copy Text</button>
@@ -92,7 +92,7 @@
         const maintags = document.getElementById("maintags");
 
         function processTags() {
-            const tags = inputBox.value.split(",").map(tag => tag.trim()).filter(tag => tag);
+            const tags = inputBox.value.split(".").map(tag => tag.trim()).filter(tag => tag);
             inputBox.value = "";
             tags.forEach(tag => {
                 const span = document.createElement("span");
