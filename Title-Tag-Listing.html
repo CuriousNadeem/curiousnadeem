@@ -147,7 +147,7 @@
             titleCounter = 1;
         });
 
-        function copyButton (button, tags){
+        function copyButton(button, tags){
         button.addEventListener("click", function() {
             const text = tags.innerText;
             navigator.clipboard.writeText(text).then(() => {
@@ -158,8 +158,8 @@
         });
         }
 
-        copyButton (copyButton, maintags);
-        copyButton (copyButton2, maintags2);
+        copyButton(copyButton, maintags);
+        copyButton(copyButton2, maintags2);
     </script>
 </body>
 </html>
