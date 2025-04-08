@@ -65,17 +65,23 @@
             width: 90%;
             height: auto;
         }
+        .midcontainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            Justify-content: center;
+        }
     </style>
 </head>
 <body>
     <div class="maincontainer">
-        <div>
+        <div class="midcontainer">
             <input type="text" id="inputBox" placeholder="Enter Titles separated by commas and press Submit">
             <div class="container" id="tagsContainer"></div>
             <button class="button" id="submitTags">Submit</button>
             <button class="button" id="clearButton">Clear Titles</button>
         </div>
-        <div>
+        <div class="midcontainer">
             <input type="text" id="titleInputBox" placeholder="Enter Tags separated by dots and press Submit">
             <div class="container" id="titlesContainer"></div>
             <button class="button" id="submitTitles">Submit</button>
