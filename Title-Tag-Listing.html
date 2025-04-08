@@ -61,24 +61,30 @@
         #clearButton:hover, #clearTitleButton:hover {
             background: darkred;
         }
+        .container{
+            width: 90%;
+            height: auto;
+        }
     </style>
 </head>
 <body>
-    <input type="text" id="inputBox" placeholder="Enter Titles separated by commas and press Submit">
-    <div class="container" id="tagsContainer"></div>
-    <button class="button" id="submitTags">Submit</button>
-    <button class="button" id="clearButton">Clear Titles</button>
+    <div class="container">
+        <input type="text" id="inputBox" placeholder="Enter Titles separated by commas and press Submit">
+        <div class="container" id="tagsContainer"></div>
+        <button class="button" id="submitTags">Submit</button>
+        <button class="button" id="clearButton">Clear Titles</button>
+        
+        <input type="text" id="titleInputBox" placeholder="Enter Tags separated by dots and press Submit">
+        <div class="container" id="titlesContainer"></div>
+        <button class="button" id="submitTitles">Submit</button>
+        <button class="button" id="clearTitleButton">Clear Tags</button>
     
-    <input type="text" id="titleInputBox" placeholder="Enter Tags separated by dots and press Submit">
-    <div class="container" id="titlesContainer"></div>
-    <button class="button" id="submitTitles">Submit</button>
-    <button class="button" id="clearTitleButton">Clear Tags</button>
-
-    <p id="maintags">png, tumbler, 20oz Tumbler Wrap, 20oz Skinny Tumbler Wrap Png, Tumbler Wrap Sublimation, 20 Oz Tumbler Wrap PNG, 20oz Tumbler Wrap Sublimation, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, mothers day, baseball, spring, mama, flowers, wedding, Tumbler Design, easter, bunny, teacher, mom, horse, heart, cat, love, stickers, svg, nurse, christian, vintage, retro, canva, typography, fathers day, father's day, cute, kawai, Easter egg, festive,</p>
-    <button class="button" id="copyButton">Copy Text</button>
-
-    <p id="maintags2">png, tumbler, 20oz Tumbler Wrap, 20oz Skinny Tumbler Wrap Png, Tumbler Wrap Sublimation, 20 Oz Tumbler Wrap PNG, 20oz Tumbler Wrap Sublimation, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, mothers day, baseball, mama, flowers, wedding, easter, bunny, teacher, mom, teacher, stickers, svg, canva, fathers day,</p>
-    <button class="button" id="copyButton2">Copy Text 2</button>
+        <p id="maintags">png, tumbler, 20oz Tumbler Wrap, 20oz Skinny Tumbler Wrap Png, Tumbler Wrap Sublimation, 20 Oz Tumbler Wrap PNG, 20oz Tumbler Wrap Sublimation, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, mothers day, baseball, spring, mama, flowers, wedding, Tumbler Design, easter, bunny, teacher, mom, horse, heart, cat, love, stickers, svg, nurse, christian, vintage, retro, canva, typography, fathers day, father's day, cute, kawai, Easter egg, festive,</p>
+        <button class="button" id="copyButton">Copy Text</button>
+    
+        <p id="maintags2">png, tumbler, 20oz Tumbler Wrap, 20oz Skinny Tumbler Wrap Png, Tumbler Wrap Sublimation, 20 Oz Tumbler Wrap PNG, 20oz Tumbler Wrap Sublimation, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, mothers day, baseball, mama, flowers, wedding, easter, bunny, teacher, mom, teacher, stickers, svg, canva, fathers day,</p>
+        <button class="button" id="copyButton2">Copy Text 2</button>
+    </div>
 
     <script>
         let tagCounter = 1;
