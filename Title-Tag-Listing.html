@@ -74,8 +74,11 @@
     <button class="button" id="submitTitles">Submit</button>
     <button class="button" id="clearTitleButton">Clear Tags</button>
 
-    <p id="maintags">png, tumbler, Tumbler Wrap, Template, 20oz, 20 oz tumbler, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, Women's Day, Women’s International Day, mothers day, baseball, spring, mama, flowers, wedding, st patricks day, Tumbler Design, Women, easter, bunny, teacher, mom, horse, heart, cat, love, stickers, svg, nurse, christian, vintage, retro, canva, women day, typography, mardi gras, cute, kawai,</p>
+    <p id="maintags">png, tumbler, 20oz Tumbler Wrap, 20oz Skinny Tumbler Wrap Png, Tumbler Wrap Sublimation, 20 Oz Tumbler Wrap PNG, 20oz Tumbler Wrap Sublimation, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, mothers day, baseball, spring, mama, flowers, wedding, Tumbler Design, easter, bunny, teacher, mom, horse, heart, cat, love, stickers, svg, nurse, christian, vintage, retro, canva, typography, fathers day, father's day, cute, kawai, Easter egg, festive,</p>
     <button class="button" id="copyButton">Copy Text</button>
+
+    <p id="maintags2">png, tumbler, Tumbler Wrap, Template, 20oz, 20 oz tumbler, Tumbler Sublimation, Skinny Tumbler, Sublimation, design, wrap, birthday, Women's Day, Women’s International Day, mothers day, baseball, spring, mama, flowers, wedding, st patricks day, Tumbler Design, Women, easter, bunny, teacher, mom, horse, heart, cat, love, stickers, svg, nurse, christian, vintage, retro, canva, women day, typography, mardi gras, cute, kawai,</p>
+    <button class="button" id="copyButton2">Copy Text 2</button>
 
     <script>
         let tagCounter = 1;
@@ -89,7 +92,9 @@
         const submitTitles = document.getElementById("submitTitles");
         const clearTitleButton = document.getElementById("clearTitleButton");
         const copyButton = document.getElementById("copyButton");
+        const copyButton2 = document.getElementById("copyButton2");
         const maintags = document.getElementById("maintags");
+        const maintags2 = document.getElementById("maintags2");
 
         function processTags() {
             const tags = inputBox.value.split(".").map(tag => tag.trim()).filter(tag => tag);
@@ -142,14 +147,19 @@
             titleCounter = 1;
         });
 
-        copyButton.addEventListener("click", function() {
-            const text = maintags.innerText;
+        function copyButton (button, tags){
+        button.addEventListener("click", function() {
+            const text = tags.innerText;
             navigator.clipboard.writeText(text).then(() => {
                 console.log("Text copied to clipboard!");
             }).catch(err => {
                 console.error("Failed to copy text: ", err);
             });
         });
+        }
+
+        copyButton (copyButton, maintags);
+        copyButton (copyButton2, maintags2);
     </script>
 </body>
 </html>
