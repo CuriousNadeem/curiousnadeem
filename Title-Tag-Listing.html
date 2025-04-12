@@ -100,6 +100,9 @@
 
         <p id="iphonetags">iPhone 12, 12 Pro, 12 Mini, 12 Pro Max, iPhone 13, 13 Pro, 13 Mini, 13 Pro Max, iPhone 14, 14 Pro, 14 Plus, 14 Pro Max, iPhone 15, 15 Pro, 15 Plus, 15 Pro Max, png, iphone, iphone Wrap, iphone case design, iphone case Wrap, iphone Wrap Sublimation, iphone Wrap PNG, iphone case Wrap Sublimation, iphone case Sublimation, Sublimation, design, wrap, birthday, mothers day, baseball, mama, flowers, wedding, easter, bunny, teacher, mom, stickers, fathers day,</p>
         <button class="button" id="copyButtonIphone">Copy Iphone Tags </button>
+
+        <p id="iphonetags2">13 Mini, 13 Pro Max, iPhone 14, 14 Pro, 14 Plus, 14 Pro Max, iPhone 15, 15 Pro, 15 Plus, 15 Pro Max, png, iphone, iphone Wrap, iphone case design, iphone case Wrap, iphone Wrap Sublimation, iphone Wrap PNG, iphone case Wrap Sublimation, iphone case Sublimation, Sublimation, design, wrap, birthday, mothers day, baseball, mama, flowers, wedding, easter, bunny, teacher, mom, stickers, fathers day,</p>
+        <button class="button" id="copyButtonIphone2">Copy Iphone Tags 2</button>
     </div>
 
     <script>
@@ -117,10 +120,12 @@
         const copyButton2 = document.getElementById("copyButton2");
         const copyButtonMug = document.getElementById("copyButtonMug");
         const copyButtonIphone = document.getElementById("copyButtonIphone");
+        const copyButtonIphone = document.getElementById("copyButtonIphone2");
         const maintags = document.getElementById("maintags");
         const maintags2 = document.getElementById("maintags2");
         const mugtags = document.getElementById("mugtags");
         const iphonetags = document.getElementById("iphonetags");
+        const iphonetags = document.getElementById("iphonetags2");
 
         function processTags() {
             const tags = inputBox.value.split(".").map(tag => tag.trim()).filter(tag => tag);
@@ -188,6 +193,7 @@
         copybutton(copyButton2, maintags2);
         copybutton(copyButtonMug, mugtags);
         copybutton(copyButtonIphone, iphonetags);
+        copybutton(copyButtonIphone2, iphonetags2);
     </script>
 </body>
 </html>
