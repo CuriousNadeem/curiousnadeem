@@ -10,12 +10,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             background-color: #f4f4f4;
             font-family: Arial, sans-serif;
         }
         #inputBox, #titleInputBox {
-            width: 50%;
+            width: 70%;
             padding: 10px;
             font-size: 18px;
             text-align: center;
@@ -24,6 +24,16 @@
             outline: none;
             margin-bottom: 10px;
         }
+        .input-wrapper {
+            width: 90%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .counter {
+            font-size: 14px;
+            color: #555;
+        }
         .container {
             margin-top: 20px;
             padding: 10px;
@@ -31,7 +41,7 @@
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             text-align: center;
-            width: 60%;
+            width: 90%;
         }
         .tag, .title {
             display: inline-block;
@@ -40,11 +50,10 @@
             padding: 2px 5px;
             margin: 3px;
             border-radius: 3px;
-            font-size: 10px; /* Smallest readable font size */
+            font-size: 10px;
         }
         .button {
-            margin-top: 10px;
-            padding: 5px 10px;
+            padding: 8px 20px;
             font-size: 14px;
             background: green;
             color: white;
@@ -56,15 +65,13 @@
             background: darkgreen;
         }
         #clearButton, #clearTitleButton {
-            background: red;
+            background:linear-gradient(to right, #ff5500, #ff0000);
         }
         #clearButton:hover, #clearTitleButton:hover {
-            background: darkred;
+            background:linear-gradient(to left, #ff5500, #ff0000);
         }
-        .maincontainer{
-            width: 90%;
-            height: auto;
-            overflow: auto;
+        .maincontainer {
+            max-width: 90%;
             margin: 30px auto;
         }
         .midcontainer {
@@ -72,210 +79,218 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            margin-bottom: 30px;
         }
         .minicontainer {
-            border: 1px solid black;
-            margin: 10px;
-            padding: 10px;
+            background: #fff;
+            padding: 15px;
+            margin: 10px auto;
+            max-width: 80%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0,0,0,0.1);
+        }
+        .tag-count {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+        .buttonContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto 0 auto;
+            gap: 20px;
+        }
+        .submitBtn {
+            background:linear-gradient(to right, #074C00, #42A341, #B8E2A3);
+        }
+        .submitBtn:hover,
+        .submitBtn:active {
+            background:linear-gradient(to left, #074C00, #42A341, #B8E2A3);
         }
     </style>
 </head>
 <body>
-    <div class="maincontainer">
-        <div class="midcontainer">
-            <input type="text" id="inputBox" placeholder="Enter Titles separated by commas and press Submit">
-            <div class="container" id="tagsContainer"></div>
-            <button class="button" id="submitTags">Submit</button>
-            <button class="button" id="clearButton">Clear Titles</button>
+<div class="maincontainer">
+    <div class="midcontainer">
+        <div class="input-wrapper">
+            <input type="text" id="inputBox" placeholder="Enter Tags separated by dots and press Submit">
+            <span class="counter" id="visibleTagsCounter">Showing 0 / Total 0</span>
         </div>
-        <div class="midcontainer">
-            <input type="text" id="titleInputBox" placeholder="Enter Tags separated by dots and press Submit">
-            <div class="container" id="titlesContainer"></div>
-            <button class="button" id="submitTitles">Submit</button>
-            <button class="button" id="clearTitleButton">Clear Tags</button>
+        <div class="container" id="tagsContainer"></div>
+        <div class="buttonContainer">
+            <div class="pagination">
+                <button class="button" onclick="changePage('tags', -1)">Previous 25</button>
+                <button class="button" onclick="changePage('tags', 1)">Next 25</button>
+            </div>
+            <button class="button submitBtn" id="submitTags">Submit</button>
+            <button class="button" id="clearButton">Clear Tags</button>
         </div>
-        <div class="minicontainer">
-            <h3 id="maintags-count">Total:32</h3>
-            <p id="maintags">Tumbler png, tumbler, 20oz Tumbler Wrap, 20oz Tumbler, Tumbler Wrap, Skinny Tumbler Wrap, Tumbler Wrap Sublimation, Tumbler wrap png, Skinny Tumbler, floral tumbler, pattern tumbler, Sublimation, straight tumbler, tapered tumbler, tumbler design, birthday, mothers day, baseball, mama, mom, flowers, wedding, 4th of july, 4th of july tumbler wrap, teacher, fathers day, graduation, autism, summer, nurse, fathers day tumbler, 4th of july tumbler, 4th of july svg, forth of july, july 4th tumbler, july forth, svg, floral tumbler wrap, mothers day tumbler, mothers day svg, 4th of july png, fathers day png,</p>
-            <button class="button" id="copyButton">Copy Text</button>
+    </div>
+    <div class="midcontainer">
+        <div class="input-wrapper">
+            <input type="text" id="titleInputBox" placeholder="Enter Titles separated by dots and press Submit">
+            <span class="counter" id="visibleTitlesCounter">Showing 0 / Total 0</span>
         </div>
-        
-        <div class="minicontainer">
-            <h3 id="maintags2-count">Total:32</h3>
-            <p id="maintags2">Tumbler png, tumbler, 20oz Tumbler Wrap, 20oz Tumbler, Tumbler Wrap, Skinny Tumbler Wrap, Tumbler Wrap Sublimation, Tumbler wrap png, Skinny Tumbler, floral tumbler, pattern tumbler, Sublimation, straight tumbler, tapered tumbler, tumbler design, birthday, mothers day, baseball, mama, mom, flowers, wedding, 4th of july, 4th of july tumbler wrap, teacher, fathers day, graduation, autism, summer, nurse,</p>
-            <button class="button" id="copyButton2">Copy Text 2</button>
-        </div>
-        
-        <div class="minicontainer">
-            <h3 id="mugtags-count">Total:35</h3>
-            <p id="mugtags">11oz mug, 12oz mug, 15oz mug, mug, mug png, mug design, mug Wrap, mug Wrap Sublimation, Travel Mug, Sublimation Mug, mug Wrap PNG, mug Wrap Sublimation, mug Sublimation, floral mug, coffee mug, birthday, mothers day, mama, mom, flowers, wedding mug, teacher, 4th of july, 4th of july mug wrap, fathers day, autism, summer mug, nurse mug, fathers day tumbler, 4th of july mug, 4th of july svg, forth of july, july 4th mug wrap, july forth, svg, floral mug wrap, mothers day mug wrap, mothers day svg, 4th of july png, fathers day png,</p>
-            <button class="button" id="copyButtonMug">Copy Mug Tags </button>
-        </div>
-        
-        <div class="minicontainer">
-            <h3 id="iphonetags-count">Total:42</h3>
-            <p id="iphonetags">iPhone 13, 13 Pro, 13 Mini, 13 Pro Max, iPhone 14, 14 Pro, 14 Plus, 14 Pro Max, iPhone 15, 15 Pro, 15 Plus, 15 Pro Max, png, iphone, iphone Wrap, iphone case design, iphone case Wrap, iphone Wrap Sublimation, iphone Wrap PNG, iphone case Wrap Sublimation, iphone case Sublimation, birthday gift, mothers day, mama png, flowers png, wedding png, teacher png, mom, fathers day, fathers day iphone wrap, 4th of july iphone wrap, 4th of july svg, forth of july, july 4th iphone warp, july forth, svg, floral iphone wrap, mothers day iphone wrap, mothers day svg, 4th of july png, fathers day png,</p>
-            <button class="button" id="copyButtonIphone">Copy Iphone Tags </button>
-        </div>
-        
-        <div class="minicontainer">
-            <h3 id="iphonetags2-count">Total:42</h3>
-            <p id="iphonetags2">iPhone 12 wrap, 12 Pro wrap, 12 Mini wrap, 12 Pro Max wrap, iPhone 13 wrap, 13 Pro wrap, 13 Mini wrap, 13 Pro Max wrap, iPhone 14 wrap, 14 Pro wrap, 14 Plus wrap, 14 Pro Max wrap, iPhone 15 wrap, 15 Pro wrap, 15 Plus wrap, 15 Pro Max wrap, iphone png, iphone, iphone Wrap, iphone case design, iphone case Wrap, iphone Wrap Sublimation, iphone Wrap PNG, floral iphone, Sublimation, birthday, mothers day, baseball, mama, mom, flowers, wedding, 4th of july, teacher, fathers day, graduation, spring, autism, summer, nurse,</p>
-            <button class="button" id="copyButtonIphone2">Copy Iphone Tags 2</button>
-        </div>
-
-        <h1 style="text-align: center;">Event Based</h1>
-        <div class="minicontainer">
-            <h3 id="event1-tumbler-count">Total:42</h3>
-            <p id="event1-tumbler">4th of july, tumbler, 20oz tumbler, 20oz tumbler wrap, tumbler wrap, tumbler png, 4th of july tumbler wrap, 4th of july tumbler png, 4th of july tumbler design, USA tumbler wrap, American Tumbler wrap, Patriotic Tumbler wrap, independence tumbler wrap, 4th of july independence, 4th of july independence tumbler, july 4th tumbler wrap, july 4th tumbler png, july 4th tumbler design, floral tumbler, birthday tumbler, horse tumbler, horseshoe tumbler, truck tumbler, american truck tumbler, mother day tumbler, mom tumbler, mama tumbler, american tumbler, summer tumbler, graduation tumbler, teacher tumbler, forth of july tumbler wrap, 4th of july tumbler bundle, 4th of july bundle, straight tumbler, tapered tumbler, birthday, mothers day, baseball, mama, mom, flowers, wedding, teacher, fathers day, graduation, autism, summer,</p>
-            <button class="button" id="event1-tumbler-button">Copy 4th of July Tumbler Tags</button>
-        </div>
-        <div class="minicontainer">
-            <h3 id="event1-mug-count">Total:42</h3>
-            <p id="event1-mug">4th of july, mug, 11oz mug, 12oz mug, 15oz mug, mug wrap, 4th of july mug wrap, 4th of july mug png, 4th of july mug design, USA mug wrap, American mug wrap, Patriotic mug wrap, independence mug wrap, 4th of july independence, 4th of july independence mug, july 4th mug wrap, july 4th mug png, july 4th mug design, floral mug, birthday mug, horse mug, horseshoe mug, truck mug, american truck mug, mother day mug, mom mug, mama mug, american mug, summer mug, graduation mug, teacher mug, forth of july mug wrap, 4th of july mug bundle, 4th of july bundle, custom mug, coffee mug, birthday, mothers day, baseball, mama, mom, flowers, wedding, teacher, graduation, spring, autism, summer, nurse,</p>
-            <button class="button" id="event1-mug-button">Copy 4th of July Mug Tags</button>
-        </div>
-        <div class="minicontainer">
-            <h3 id="event1-iphone-count">Total:42</h3>
-            <p id="event1-iphone">4th of july, iphone, iphone wrap, 4th of july iphone wrap, 4th of july iphone png, 4th of july iphone design, USA iphone wrap, American iphone wrap, Patriotic iphone wrap, independence iphone wrap, 4th of july independence, 4th of july independence iphone, july 4th iphone wrap, july 4th iphone png, july 4th iphone design, birthday iphone, horseshoe iphone, truck iphone, american truck iphone, mama iphone, american iphone, teacher iphone, forth of july iphone wrap, 4th of july bundle, iPhone 12 wrap, 12 Pro wrap, 12 Mini wrap, 12 Pro Max wrap, iPhone 13 wrap, 13 Pro wrap, 13 Mini wrap, 13 Pro Max wrap, iPhone 14 wrap, 14 Pro wrap, 14 Plus wrap, 14 Pro Max wrap, iPhone 15 wrap, 15 Pro wrap, 15 Plus wrap, 15 Pro Max wrap, baseball, mama, mom, flowers, wedding, graduation, autism, summer,</p>
-            <button class="button" id="event1-iphone-button">Copy 4th of July Iphone Tags</button>
+        <div class="container" id="titlesContainer"></div>
+        <div class="buttonContainer">
+            <div class="pagination">
+                <button class="button" onclick="changePage('titles', -1)">Previous 25</button>
+                <button class="button" onclick="changePage('titles', 1)">Next 25</button>
+            </div>
+            <button class="button submitBtn" id="submitTitles">Submit</button>
+            <button class="button" id="clearTitleButton">Clear Titles</button>
         </div>
     </div>
 
-    <script>
-        let tagCounter = 1;
-        let titleCounter = 1;
-        const inputBox = document.getElementById("inputBox");
-        const tagsContainer = document.getElementById("tagsContainer");
-        const submitTags = document.getElementById("submitTags");
-        const clearButton = document.getElementById("clearButton");
-        const titleInputBox = document.getElementById("titleInputBox");
-        const titlesContainer = document.getElementById("titlesContainer");
-        const submitTitles = document.getElementById("submitTitles");
-        const clearTitleButton = document.getElementById("clearTitleButton");
+    <!-- Static Mini Tag Containers -->
+    <div class="minicontainer" data-label="General Tumbler Tags">
+        <h3 class="tag-count"></h3>
+        <p class="tag-list">Tumbler png, tumbler, 20oz Tumbler Wrap, 20oz Tumbler, Tumbler Wrap, Skinny Tumbler Wrap, Tumbler Wrap Sublimation, Tumbler wrap png, Skinny Tumbler, floral tumbler, pattern tumbler, Sublimation, straight tumbler, tapered tumbler, tumbler design, birthday, mothers day, baseball, mama, mom, flowers, wedding, 4th of july, 4th of july tumbler wrap, teacher, fathers day, graduation, autism, summer, nurse, fathers day tumbler, 4th of july tumbler, 4th of july svg, forth of july, july 4th tumbler, july forth, svg, floral tumbler wrap, mothers day tumbler, mothers day svg, 4th of july png, fathers day png,</p>
+        <button class="button copy-button">Copy</button>
+    </div>
+    <div class="minicontainer" data-label="General Mug Tags">
+        <h3 class="tag-count"></h3>
+        <p class="tag-list">11oz mug, 12oz mug, 15oz mug, mug, mug png, mug design, mug Wrap, mug Wrap Sublimation, Travel Mug, Sublimation Mug, mug Wrap PNG, mug Wrap Sublimation, mug Sublimation, floral mug, coffee mug, birthday, mothers day, mama, mom, flowers, wedding mug, teacher, 4th of july, 4th of july mug wrap, fathers day, autism, summer mug, nurse mug, fathers day tumbler, 4th of july mug, 4th of july svg, forth of july, july 4th mug wrap, july forth, svg, floral mug wrap, mothers day mug wrap, mothers day svg, 4th of july png, fathers day png,</p>
+        <button class="button copy-button">Copy</button>
+    </div>
+    <div class="minicontainer" data-label="General iPhone Tags">
+        <h3 class="tag-count"></h3>
+        <p class="tag-list">iPhone 13, 13 Pro, 13 Mini, 13 Pro Max, iPhone 14, 14 Pro, 14 Plus, 14 Pro Max, iPhone 15, 15 Pro, 15 Plus, 15 Pro Max, png, iphone, iphone Wrap, iphone case design, iphone case Wrap, iphone Wrap Sublimation, iphone Wrap PNG, iphone case Wrap Sublimation, iphone case Sublimation, birthday gift, mothers day, mama png, flowers png, wedding png, teacher png, mom, fathers day, fathers day iphone wrap, 4th of july iphone wrap, 4th of july svg, forth of july, july 4th iphone warp, july forth, svg, floral iphone wrap, mothers day iphone wrap, mothers day svg, 4th of july png, fathers day png,</p>
+        <button class="button copy-button">Copy</button>
+    </div>
 
-        const copyButton = document.getElementById("copyButton");
-        const copyButton2 = document.getElementById("copyButton2");
-        const copyButtonMug = document.getElementById("copyButtonMug");
-        const copyButtonIphone = document.getElementById("copyButtonIphone");
-        const copyButtonIphone2 = document.getElementById("copyButtonIphone2");
+    <h2 style="text-align:center; margin-top:40px;">Event Based</h2>
+    <div class="minicontainer" data-label="4th of July Tumbler Tags">
+        <h3 class="tag-count"></h3>
+        <p class="tag-list">4th of july, tumbler, 20oz tumbler, 20oz tumbler wrap, tumbler wrap, tumbler png, 4th of july tumbler wrap, 4th of july tumbler png, 4th of july tumbler design, USA tumbler wrap, American Tumbler wrap, Patriotic Tumbler wrap, independence tumbler wrap, 4th of july independence, 4th of july independence tumbler, july 4th tumbler wrap, july 4th tumbler png, july 4th tumbler design, floral tumbler, birthday tumbler, horse tumbler, horseshoe tumbler, truck tumbler, american truck tumbler, mother day tumbler, mom tumbler, mama tumbler, american tumbler, summer tumbler, graduation tumbler, teacher tumbler, forth of july tumbler wrap, 4th of july tumbler bundle, 4th of july bundle, straight tumbler, tapered tumbler, birthday, mothers day, baseball, mama, mom, flowers, wedding, teacher, fathers day, graduation, autism, summer,</p>
+        <button class="button copy-button">Copy</button>
+    </div>
+    <div class="minicontainer" data-label="4th of July Mug Tags">
+        <h3 class="tag-count"></h3>
+        <p class="tag-list">4th of july, mug, 11oz mug, 12oz mug, 15oz mug, mug wrap, 4th of july mug wrap, 4th of july mug png, 4th of july mug design, USA mug wrap, American mug wrap, Patriotic mug wrap, independence mug wrap, 4th of july independence, 4th of july independence mug, july 4th mug wrap, july 4th mug png, july 4th mug design, floral mug, birthday mug, horse mug, horseshoe mug, truck mug, american truck mug, mother day mug, mom mug, mama mug, american mug, summer mug, graduation mug, teacher mug, forth of july mug wrap, 4th of july mug bundle, 4th of july bundle, custom mug, coffee mug, birthday, mothers day, baseball, mama, mom, flowers, wedding, teacher, graduation, spring, autism, summer, nurse,</p>
+        <button class="button copy-button">Copy</button>
+    </div>
+    <div class="minicontainer" data-label="4th of July Iphone Tags">
+        <h3 class="tag-count"></h3>
+        <p class="tag-list">4th of july, iphone, iphone wrap, 4th of july iphone wrap, 4th of july iphone png, 4th of july iphone design, USA iphone wrap, American iphone wrap, Patriotic iphone wrap, independence iphone wrap, 4th of july independence, 4th of july independence iphone, july 4th iphone wrap, july 4th iphone png, july 4th iphone design, birthday iphone, horseshoe iphone, truck iphone, american truck iphone, mama iphone, american iphone, teacher iphone, forth of july iphone wrap, 4th of july bundle, iPhone 12 wrap, 12 Pro wrap, 12 Mini wrap, 12 Pro Max wrap, iPhone 13 wrap, 13 Pro wrap, 13 Mini wrap, 13 Pro Max wrap, iPhone 14 wrap, 14 Pro wrap, 14 Plus wrap, 14 Pro Max wrap, iPhone 15 wrap, 15 Pro wrap, 15 Plus wrap, 15 Pro Max wrap, baseball, mama, mom, flowers, wedding, graduation, autism, summer,</p>
+        <button class="button copy-button">Copy</button>
+    </div>
+</div>
 
-        const EventTumblerButton = document.getElementById("event1-tumbler-button");
-        const EventMugButton = document.getElementById("event1-mug-button");
-        const EventIphoneButton = document.getElementById("event1-iphone-button");
+<script>
+    const state = {
+        tags: [],
+        titles: [],
+        currentTagsPage: 0,
+        currentTitlesPage: 0,
+        pageSize: 25
+    };
 
-        const maintags = document.getElementById("maintags");
-        const maintags2 = document.getElementById("maintags2");
-        const mugtags = document.getElementById("mugtags");
-        const iphonetags = document.getElementById("iphonetags");
-        const iphonetags2 = document.getElementById("iphonetags2");
+    const inputBox = document.getElementById("inputBox");
+    const tagsContainer = document.getElementById("tagsContainer");
+    const submitTags = document.getElementById("submitTags");
+    const clearButton = document.getElementById("clearButton");
+    const visibleTagsCounter = document.getElementById("visibleTagsCounter");
 
-        const EventTumbler = document.getElementById("event1-tumbler");
-        const EventMug = document.getElementById("event1-mug");
-        const EventIphone = document.getElementById("event1-iphone");
+    const titleInputBox = document.getElementById("titleInputBox");
+    const titlesContainer = document.getElementById("titlesContainer");
+    const submitTitles = document.getElementById("submitTitles");
+    const clearTitleButton = document.getElementById("clearTitleButton");
+    const visibleTitlesCounter = document.getElementById("visibleTitlesCounter");
 
-        function processTags() {
-            const tags = inputBox.value.split(".").map(tag => tag.trim()).filter(tag => tag);
-            inputBox.value = "";
-            tags.forEach(tag => {
-                const span = document.createElement("span");
-                span.classList.add("tag");
-                span.id = `t_${tagCounter++}`;
-                span.textContent = tag;
-                tagsContainer.appendChild(span);
-            });
-        }
+    function renderItems(container, items, className, prefix, page, counterEl) {
+        container.innerHTML = "";
+        const start = page * state.pageSize;
+        const visibleItems = items.slice(start, start + state.pageSize);
 
-        function processTitles() {
-            const titles = titleInputBox.value.split(".").map(title => title.trim()).filter(title => title);
-            titleInputBox.value = "";
-            titles.forEach(title => {
-                const span = document.createElement("span");
-                span.classList.add("title");
-                span.id = `title_${titleCounter++}`;
-                span.textContent = title;
-                titlesContainer.appendChild(span);
-            });
-        }
-
-        submitTags.addEventListener("click", processTags);
-        submitTitles.addEventListener("click", processTitles);
-
-        inputBox.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                processTags();
+        visibleItems.forEach((item, index) => {
+            const span = document.createElement("span");
+            span.classList.add(className);
+            span.textContent = item;
+            if (className === "tag") {
+                span.id = `t_${index + 1}`;
+            } else if (className === "title") {
+                span.id = `title_${index + 1}`;
             }
+            container.appendChild(span);
         });
 
-        titleInputBox.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
-                event.preventDefault();
-                processTitles();
-            }
-        });
-
-        clearButton.addEventListener("click", function() {
-            tagsContainer.innerHTML = "";
-            tagCounter = 1;
-        });
-
-        clearTitleButton.addEventListener("click", function() {
-            titlesContainer.innerHTML = "";
-            titleCounter = 1;
-        });
-
-        function copybutton(button, tags){
-        button.addEventListener("click", function() {
-            const text = tags.innerText;
-            navigator.clipboard.writeText(text).then(() => {
-                console.log("Text copied to clipboard!");
-            }).catch(err => {
-                console.error("Failed to copy text: ", err);
-            });
-        });
+        const current = visibleItems.length;
+        const total = items.length;
+        if (current > 0) {
+            counterEl.textContent = `Showing ${start + 1}–${start + current} / Total ${total}`;
+        } else {
+            counterEl.textContent = `Showing 0 / Total ${total}`;
         }
-
-        copybutton(copyButton, maintags);
-        copybutton(copyButton2, maintags2);
-        copybutton(copyButtonMug, mugtags);
-        copybutton(copyButtonIphone, iphonetags);
-        copybutton(copyButtonIphone2, iphonetags2);
-
-        copybutton(EventTumblerButton, EventTumbler);
-        copybutton(EventMugButton, EventMug);
-        copybutton(EventIphoneButton, EventIphone);
-
-    function countTags(paragraphId, displayId) {
-      const para = document.getElementById(paragraphId);
-      const display = document.getElementById(displayId);
-
-      if (!para || !display) {
-        console.error("Invalid IDs provided.");
-        return;
-      }
-
-      // Split the tags by comma and filter out empty strings or extra spaces
-      const tags = para.textContent
-                      .split(',')
-                      .map(tag => tag.trim())
-                      .filter(tag => tag.length > 0);
-
-      // Display the count
-      display.textContent = `Total Tags: ${tags.length}`;
     }
 
-    // Optional: Run the function immediately when page loads
-    window.onload = function() {
-        countTags('maintags', 'maintags-count');
-        countTags('maintags2', 'maintags2-count');
-        countTags('mugtags', 'mugtags-count');
-        countTags('iphonetags', 'iphonetags-count');
-        countTags('iphonetags2', 'iphonetags2-count');
-        countTags('event1-tumbler', 'event1-tumbler-count');
-        countTags('event1-mug', 'event1-mug-count');
-        countTags('event1-iphone', 'event1-iphone-count');
+    function handleSubmit(inputEl, stateArr, container, counterEl, className, prefix, pageKey) {
+        const values = inputEl.value.split(".").map(x => x.trim()).filter(Boolean);
+        stateArr.push(...values);
+        inputEl.value = "";
+        renderItems(container, stateArr, className, prefix, state[pageKey], counterEl);
     }
-    </script>
+
+    function handleClear(stateArr, container, counterEl, pageKey) {
+        stateArr.length = 0;
+        state[pageKey] = 0;
+        container.innerHTML = "";
+        counterEl.textContent = "Showing 0 / Total 0";
+    }
+
+    function changePage(type, direction) {
+        if (type === 'tags') {
+            const max = Math.ceil(state.tags.length / state.pageSize) - 1;
+            state.currentTagsPage = Math.max(0, Math.min(max, state.currentTagsPage + direction));
+            renderItems(tagsContainer, state.tags, "tag", "t", state.currentTagsPage, visibleTagsCounter);
+        } else {
+            const max = Math.ceil(state.titles.length / state.pageSize) - 1;
+            state.currentTitlesPage = Math.max(0, Math.min(max, state.currentTitlesPage + direction));
+            renderItems(titlesContainer, state.titles, "title", "title", state.currentTitlesPage, visibleTitlesCounter);
+        }
+    }
+
+    submitTags.addEventListener("click", () => handleSubmit(inputBox, state.tags, tagsContainer, visibleTagsCounter, "tag", "t", "currentTagsPage"));
+    submitTitles.addEventListener("click", () => handleSubmit(titleInputBox, state.titles, titlesContainer, visibleTitlesCounter, "title", "title", "currentTitlesPage"));
+
+    clearButton.addEventListener("click", () => handleClear(state.tags, tagsContainer, visibleTagsCounter, "currentTagsPage"));
+    clearTitleButton.addEventListener("click", () => handleClear(state.titles, titlesContainer, visibleTitlesCounter, "currentTitlesPage"));
+
+    inputBox.addEventListener("keypress", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleSubmit(inputBox, state.tags, tagsContainer, visibleTagsCounter, "tag", "t", "currentTagsPage");
+        }
+    });
+
+    titleInputBox.addEventListener("keypress", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleSubmit(titleInputBox, state.titles, titlesContainer, visibleTitlesCounter, "title", "title", "currentTitlesPage");
+        }
+    });
+
+    document.querySelectorAll('.minicontainer').forEach(container => {
+        const tagList = container.querySelector('.tag-list');
+        const countDisplay = container.querySelector('.tag-count');
+        const copyBtn = container.querySelector('.copy-button');
+        const label = container.getAttribute('data-label') || 'Tags';
+
+        const tagsArray = tagList.innerText.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        countDisplay.innerText = `${label} — Total: ${tagsArray.length}`;
+
+        copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(tagList.innerText.trim());
+            copyBtn.innerText = "Copied!";
+            setTimeout(() => copyBtn.innerText = "Copy", 1500);
+        });
+    });
+</script>
 </body>
 </html>
