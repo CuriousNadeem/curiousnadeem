@@ -121,6 +121,7 @@
         <div class="input-wrapper">
             <input type="text" id="inputBox" placeholder="Enter Titles separated by dots and press Submit">
             <span class="counter" id="visibleTagsCounter">Showing 0 / Total 0</span>
+            <button class="button" id="togglePageSizeButton">Toggle 50 On</button>
         </div>
         <div class="container" id="tagsContainer"></div>
         <div class="buttonContainer">
@@ -297,6 +298,30 @@
             setTimeout(() => copyBtn.innerText = "Copy", 1500);
         });
     });
+
+    const toggleButton = document.getElementById("togglePageSizeButton");
+
+    toggleButton.addEventListener("click", () => {
+        // Toggle between 25 and 50
+        state.pageSize = (state.pageSize === 25) ? 50 : 25;
+    
+        // Update button text accordingly
+        toggleButton.textContent = (state.pageSize === 25) ? "Toggle 50 On" : "Toggle 25 On";
+    
+        // Show/hide pagination buttons
+        const paginations = document.querySelectorAll(".pagination");
+        paginations.forEach(pagination => {
+            pagination.style.display = (state.pageSize === 25) ? "flex" : "none";
+        });
+    
+        // Re-render both tags and titles at current page = 0
+        state.currentTagsPage = 0;
+        state.currentTitlesPage = 0;
+    
+        renderItems(tagsContainer, state.tags, "tag", "t", state.currentTagsPage, visibleTagsCounter);
+        renderItems(titlesContainer, state.titles, "title", "title", state.currentTitlesPage, visibleTitlesCounter);
+    });
+
 
 </script>
 </body>
