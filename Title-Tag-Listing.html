@@ -113,10 +113,21 @@
         .submitBtn:active {
             background:linear-gradient(to left, #074C00, #42A341, #B8E2A3);
         }
+        .clear-all-btn {
+            background: linear-gradient(to right, #ff0044, #cc0000);
+            font-weight: bold;
+        }
+        .clear-all-btn:hover {
+            background: linear-gradient(to left, #ff0044, #cc0000);
+        }
+
     </style>
 </head>
 <body>
 <div class="maincontainer">
+    <div style="text-align:center; margin: 10px auto;">
+        <button class="button clear-all-btn">Clear All</button>
+    </div>
     <div class="midcontainer">
         <div class="input-wrapper">
             <input type="text" id="inputBox" placeholder="Enter Titles separated by dots and press Submit">
@@ -365,10 +376,32 @@
 
     });
 
-
+    document.querySelector('.clear-all-btn').addEventListener('click', () => {
+        // Clear all state arrays
+        state.tags.length = 0;
+        state.titles.length = 0;
+        state.descriptions.length = 0;
+    
+        // Reset page counters
+        state.currentTagsPage = 0;
+        state.currentTitlesPage = 0;
+        state.currentDescriptionsPage = 0;
+    
+        // Clear containers
+        tagsContainer.innerHTML = "";
+        titlesContainer.innerHTML = "";
+        descriptionsContainer.innerHTML = "";
+    
+        // Reset counters display
+        visibleTagsCounter.textContent = "Showing 0 / Total 0";
+        visibleTitlesCounter.textContent = "Showing 0 / Total 0";
+        visibleDescriptionsCounter.textContent = "Showing 0 / Total 0";
+    });
+    
 </script>
 </body>
 </html>
+
 
 
 
