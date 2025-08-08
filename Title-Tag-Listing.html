@@ -148,6 +148,22 @@
             <button class="button" id="clearTitleButton">Clear Titles</button>
         </div>
     </div>
+    <div class="midcontainer">
+        <div class="input-wrapper">
+            <input type="text" id="descriptionInputBox" placeholder="Enter Descriptions separated by dots and press Submit">
+            <span class="counter" id="visibleDescriptionsCounter">Showing 0 / Total 0</span>
+        </div>
+        <div class="container" id="descriptionsContainer"></div>
+        <div class="buttonContainer">
+            <div class="pagination">
+                <button class="button" onclick="changePage('descriptions', -1)">Previous 25</button>
+                <button class="button" onclick="changePage('descriptions', 1)">Next 25</button>
+            </div>
+            <button class="button submitBtn" id="submitDescriptions">Submit</button>
+            <button class="button" id="clearDescriptionButton">Clear Descriptions</button>
+        </div>
+    </div>
+
 
     <!-- Static Mini Tag Containers -->
     <div class="minicontainer" data-label="General Tumbler Tags">
@@ -188,8 +204,10 @@
     const state = {
         tags: [],
         titles: [],
+        descriptions: [],
         currentTagsPage: 0,
         currentTitlesPage: 0,
+        currentDescriptionsPage: 0,
         pageSize: 25
     };
 
@@ -204,6 +222,13 @@
     const submitTitles = document.getElementById("submitTitles");
     const clearTitleButton = document.getElementById("clearTitleButton");
     const visibleTitlesCounter = document.getElementById("visibleTitlesCounter");
+
+    const descriptionInputBox = document.getElementById("descriptionInputBox");
+    const descriptionsContainer = document.getElementById("descriptionsContainer");
+    const submitDescriptions = document.getElementById("submitDescriptions");
+    const clearDescriptionButton = document.getElementById("clearDescriptionButton");
+    const visibleDescriptionsCounter = document.getElementById("visibleDescriptionsCounter");
+
 
     function renderItems(container, items, className, prefix, page, counterEl) {
         container.innerHTML = "";
@@ -250,6 +275,10 @@
             const max = Math.ceil(state.tags.length / state.pageSize) - 1;
             state.currentTagsPage = Math.max(0, Math.min(max, state.currentTagsPage + direction));
             renderItems(tagsContainer, state.tags, "tag", "t", state.currentTagsPage, visibleTagsCounter);
+        } else if (type === 'descriptions') {
+            const max = Math.ceil(state.descriptions.length / state.pageSize) - 1;
+            state.currentDescriptionsPage = Math.max(0, Math.min(max, state.currentDescriptionsPage + direction));
+            renderItems(descriptionsContainer, state.descriptions, "description", "description", state.currentDescriptionsPage, visibleDescriptionsCounter);
         } else {
             const max = Math.ceil(state.titles.length / state.pageSize) - 1;
             state.currentTitlesPage = Math.max(0, Math.min(max, state.currentTitlesPage + direction));
@@ -259,9 +288,13 @@
 
     submitTags.addEventListener("click", () => handleSubmit(inputBox, state.tags, tagsContainer, visibleTagsCounter, "tag", "t", "currentTagsPage"));
     submitTitles.addEventListener("click", () => handleSubmit(titleInputBox, state.titles, titlesContainer, visibleTitlesCounter, "title", "title", "currentTitlesPage"));
+    submitDescriptions.addEventListener("click", () => handleSubmit(descriptionInputBox, state.descriptions, descriptionsContainer, visibleDescriptionsCounter, "description", "description", "currentDescriptionsPage"));
+
 
     clearButton.addEventListener("click", () => handleClear(state.tags, tagsContainer, visibleTagsCounter, "currentTagsPage"));
     clearTitleButton.addEventListener("click", () => handleClear(state.titles, titlesContainer, visibleTitlesCounter, "currentTitlesPage"));
+    clearDescriptionButton.addEventListener("click", () => handleClear(state.descriptions, descriptionsContainer, visibleDescriptionsCounter, "currentDescriptionsPage"));
+
 
     inputBox.addEventListener("keypress", e => {
         if (e.key === "Enter") {
@@ -276,6 +309,14 @@
             handleSubmit(titleInputBox, state.titles, titlesContainer, visibleTitlesCounter, "title", "title", "currentTitlesPage");
         }
     });
+    
+    descriptionInputBox.addEventListener("keypress", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleSubmit(descriptionInputBox, state.descriptions, descriptionsContainer, visibleDescriptionsCounter, "description", "description", "currentDescriptionsPage");
+        }
+    });
+
 
     document.querySelectorAll('.minicontainer').forEach((container, index) => {
         const tagList = container.querySelector('.tag-list');
@@ -320,9 +361,12 @@
     
         renderItems(tagsContainer, state.tags, "tag", "t", state.currentTagsPage, visibleTagsCounter);
         renderItems(titlesContainer, state.titles, "title", "title", state.currentTitlesPage, visibleTitlesCounter);
+        renderItems(descriptionsContainer, state.descriptions, "description", "description", state.currentDescriptionsPage, visibleDescriptionsCounter);
+
     });
 
 
 </script>
 </body>
 </html>
+
