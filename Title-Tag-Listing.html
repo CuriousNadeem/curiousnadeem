@@ -369,10 +369,11 @@
         // Re-render both tags and titles at current page = 0
         state.currentTagsPage = 0;
         state.currentTitlesPage = 0;
+        state.currentDescriptionsPage = 0;
     
         renderItems(tagsContainer, state.tags, "tag", "t", state.currentTagsPage, visibleTagsCounter);
         renderItems(titlesContainer, state.titles, "title", "title", state.currentTitlesPage, visibleTitlesCounter);
-        renderItems(descriptionsContainer, state.descriptions, "description", "description", state.currentDescriptionsPage, visibleDescriptionsCounter);
+        renderItems(descriptionsContainer, state.descriptions, "description", "desc", state.currentDescriptionsPage, visibleDescriptionsCounter);
 
     });
 
@@ -401,6 +402,7 @@
 </script>
 </body>
 </html>
+
 
 
 
