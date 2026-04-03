@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+    h2 { text-align: center; }
+    input, select { width: 100%; padding: 10px; margin: 10px 0; }
+    button {
+      width: 100%; padding: 10px; background: #007BFF; color: #fff;
+      border: none; border-radius: 5px; cursor: pointer;
+    }
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Generate PDF</h2>
+
+    <select id="websiteSelect" onchange="toggleButton()">
+      <option value="">Please select a website</option>
+      <option value="cozy">CozyXCanvas</option>
+      <option value="creative">Creative Layout Art</option>
+    </select>
+
+    <input type="file" id="imageInput" accept="image/*">
+    <input type="text" id="linkInput" placeholder="Enter your download link">
+
+    <button id="generateBtn" onclick="generatePDF()" disabled>Generate PDF</button>
+  </div>
+
+  <script>
+    function toggleButton() {
+      const select = document.getElementById('websiteSelect').value;
+      const btn = document.getElementById('generateBtn');
+      btn.disabled = !select;
+    }
+
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      const imageInput = document.getElementById('imageInput');
+      const link = document.getElementById('linkInput').value;
+      const site = document.getElementById('websiteSelect').value;
+
+      let brandName = "";
+      let brandLink = "";
+
+      if (site === "cozy") {
+        brandName = "CozyXCanvas";
+        brandLink = "https://cozyxcanvas.etsy.com";
+      } else if (site === "creative") {
+        brandName = "Creative Layout Art";
+        brandLink = "https://creativelayoutart.etsy.com";
+      }
+
+      if (!imageInput.files[0] || !link || !site) {
+        alert("Please complete all fields.");
+        return;
+      }
+
+      const file = imageInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        const imgData = e.target.result;
+        const img = new Image();
+        img.src = imgData;
+
+        img.onload = function () {
+          const pageWidth = doc.internal.pageSize.getWidth();
+          const pageHeight = doc.internal.pageSize.getHeight();
+
+          const margin = 10;
+          const contentWidth = pageWidth - margin * 2;
+
+          const footerReserved = 45;
+          const usableHeight = pageHeight - margin - footerReserved;
+
+          const estimatedTextHeight = 75;
+          const maxImageHeight = usableHeight - estimatedTextHeight;
+
+          let imgWidth = contentWidth;
+          let imgHeight = (img.height * imgWidth) / img.width;
+
+          if (imgHeight > maxImageHeight) {
+            imgHeight = maxImageHeight;
+            imgWidth = (img.width * imgHeight) / img.height;
+          }
+
+          const imgX = (pageWidth - imgWidth) / 2;
+          doc.addImage(imgData, 'JPEG', imgX, margin, imgWidth, imgHeight);
+
+          let y = margin + imgHeight + 10;
+
+          doc.setFontSize(16);
+          doc.setTextColor(0, 0, 0);
+          doc.text("Your Product Download", margin, y);
+          y += 10;
+
+          const btnWidth = 100;
+          const btnHeight = 10;
+          const btnX = (pageWidth - btnWidth) / 2;
+
+          doc.setFillColor(0, 123, 255);
+          doc.rect(btnX, y, btnWidth, btnHeight, 'F');
+
+          doc.setTextColor(255, 255, 255);
+          doc.setFontSize(12);
+          doc.text("Download Now", btnX + 20, y + 7);
+          doc.link(btnX, y, btnWidth, btnHeight, { url: link });
+
+          y += 18;
+
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(12);
+          doc.text("Thank you for your purchase!", margin, y);
+          y += 8;
+
+          doc.text("You can download your product from the link below:", margin, y);
+          y += 8;
+
+          doc.setTextColor(0, 0, 255);
+          const splitLink = doc.splitTextToSize(link, contentWidth);
+          splitLink.forEach((line, index) => {
+            doc.textWithLink(line, margin, y + (index * 6), { url: link });
+          });
+
+          let footerY = pageHeight - footerReserved + 10;
+
+          doc.setTextColor(0, 0, 0);
+          doc.setFontSize(11);
+
+          const ownership = `This product belongs to ${brandName}`;
+          doc.text(ownership, (pageWidth - doc.getTextWidth(ownership)) / 2, footerY);
+
+          footerY += 8;
+
+          const support = "If you are facing any issues, please contact us via our Etsy store page.";
+          const supportLines = doc.splitTextToSize(support, contentWidth);
+          doc.text(supportLines, (pageWidth - doc.getTextWidth(supportLines[0])) / 2, footerY);
+
+          footerY += 10;
+
+          doc.setTextColor(0, 0, 255);
+          doc.textWithLink(brandLink, (pageWidth - doc.getTextWidth(brandLink)) / 2, footerY, { url: brandLink });
+
+          doc.save("download.pdf");
+        };
+      };
+
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
