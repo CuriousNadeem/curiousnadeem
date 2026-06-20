@@ -669,8 +669,14 @@
     if(targetExists){ throw new Error('a file named ' + newName + ' already exists here, skipped'); }
 
     if(typeof fileHandle.move === 'function'){
-      await fileHandle.move(newName);
-      return;
+      try{
+        await fileHandle.move(newName);
+        return;
+      } catch(moveErr){
+        // Some storage backends (notably Android folder providers) expose
+        // move() but reject every call. Fall through to the manual
+        // copy-then-delete approach below instead of failing the rename.
+      }
     }
     const file = await fileHandle.getFile();
     const buffer = await file.arrayBuffer();
@@ -678,7 +684,11 @@
     const writable = await newHandle.createWritable();
     await writable.write(buffer);
     await writable.close();
-    await dirHandle.removeEntry(oldName);
+    try{
+      await dirHandle.removeEntry(oldName);
+    } catch(delErr){
+      throw new Error('copied to ' + newName + ' but couldn\u2019t remove the original ' + oldName + ' (' + delErr.message + ')');
+    }
   }
 
   async function processDirectory(dirHandle, label){
