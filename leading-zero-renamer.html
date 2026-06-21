@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strip the Zeros — Batch File Renamer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#20262c;
+    --bg-dot: rgba(255,255,255,0.035);
+    --panel:#ece6d4;
+    --panel-edge:#d8cfb4;
+    --ink:#201d17;
+    --ink-soft:#6b6354;
+    --ink-faint:#8c8472;
+    --rust:#bc4b2c;
+    --rust-dark:#9b3a20;
+    --teal:#2f6e63;
+    --teal-dark:#235149;
+    --steel:#3c454e;
+    --steel-light:#4f5b66;
+    --line:#c9bfa4;
+    --paper-2:#e2dac2;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --display: 'Space Grotesk', sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(var(--bg-dot) 1px, transparent 1px) 0 0/22px 22px,
+      var(--bg);
+    font-family:var(--sans);
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:48px 20px 80px;
+  }
+
+  .app{
+    width:100%;
+    max-width:760px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--panel-edge);
+    border-radius:10px;
+    padding:40px 40px 36px;
+    box-shadow: 0 30px 60px -25px rgba(0,0,0,0.55);
+    position:relative;
+  }
+
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background:var(--rust); display:inline-block; }
+
+  h1{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:clamp(28px,4.2vw,38px);
+    line-height:1.08;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+
+  .lede{
+    font-size:15px;
+    line-height:1.55;
+    color:var(--ink-soft);
+    margin:0 0 30px;
+    max-width:54ch;
+  }
+  .lede code{
+    font-family:var(--mono);
+    background:var(--paper-2);
+    border:1px solid var(--line);
+    padding:1px 5px;
+    border-radius:4px;
+    font-size:13px;
+  }
+
+  /* ---- dropzone ---- */
+  .dropzone{
+    border:1.5px dashed var(--line);
+    border-radius:8px;
+    padding:30px 24px;
+    text-align:center;
+    background:rgba(255,255,255,0.18);
+    transition: border-color .15s ease, background .15s ease;
+  }
+  .dropzone.dragover{
+    border-color:var(--rust);
+    background:rgba(188,75,44,0.08);
+  }
+  .dz-icon{ width:34px; height:34px; margin:0 auto 12px; color:var(--ink-soft); }
+  .dz-text{ font-size:14px; color:var(--ink-soft); margin:0 0 4px; }
+  .dz-or{ font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--ink-faint); margin:10px 0; text-transform:uppercase; }
+
+  /* ---- buttons ---- */
+  .btn{
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:14px;
+    padding:11px 20px;
+    border-radius:6px;
+    border:1.5px solid transparent;
+    cursor:pointer;
+    transition: transform .08s ease, opacity .15s ease, background .15s ease;
+    line-height:1;
+  }
+  .btn:active{ transform: translateY(1px); }
+  .btn:disabled{ cursor:not-allowed; opacity:.45; transform:none; }
+  .btn:focus-visible{ outline:2.5px solid var(--rust); outline-offset:2px; }
+
+  .btn-choose{ background:var(--ink); color:var(--panel); }
+  .btn-choose:hover:not(:disabled){ background:#33302a; }
+
+  .btn-start{ background:var(--rust); color:#fff; }
+  .btn-start:hover:not(:disabled){ background:var(--rust-dark); }
+
+  .btn-stop{ background:var(--steel); color:#fff; }
+  .btn-stop:hover:not(:disabled){ background:var(--steel-light); }
+
+  .btn-refresh{ background:transparent; color:var(--teal-dark); border-color:var(--teal); }
+  .btn-refresh:hover:not(:disabled){ background:rgba(47,110,99,0.08); }
+
+  .btn-zip{ background:var(--teal); color:#fff; width:100%; padding:13px 20px; font-size:15px; }
+  .btn-zip:hover:not(:disabled){ background:var(--teal-dark); }
+
+  /* ---- control row ---- */
+  .control-row{
+    margin-top:18px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+
+  .folder-chip{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-family:var(--mono);
+    font-size:13px;
+    color:var(--ink-soft);
+    min-width:0;
+  }
+  .folder-chip svg{ flex-shrink:0; width:16px; height:16px; color:var(--rust); }
+  .folder-chip .chip-name{
+    color:var(--ink);
+    font-weight:500;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+
+  .action-buttons{ display:flex; gap:10px; flex-wrap:wrap; }
+
+  .hidden{ display:none !important; }
+
+  /* ---- stats ledger ---- */
+  .stats{
+    margin-top:30px;
+    display:flex;
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .stat{
+    flex:1;
+    padding:16px 14px;
+    text-align:center;
+    border-right:1px solid var(--line);
+  }
+  .stat:last-child{ border-right:none; }
+  .stat .num{
+    font-family:var(--mono);
+    font-weight:600;
+    font-size:24px;
+    font-variant-numeric: tabular-nums;
+    color:var(--ink);
+    display:block;
+  }
+  .stat .lbl{
+    font-size:10.5px;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-top:4px;
+    display:block;
+  }
+
+  /* ---- progress ---- */
+  .progress-wrap{
+    margin-top:18px;
+    height:6px;
+    border-radius:3px;
+    background:var(--paper-2);
+    overflow:hidden;
+    position:relative;
+  }
+  .progress-bar{
+    height:100%;
+    width:35%;
+    background:var(--rust);
+    border-radius:3px;
+  }
+  .progress-bar.running{
+    animation: stripe-move 1.1s linear infinite;
+    background: repeating-linear-gradient(90deg, var(--rust) 0 16px, var(--rust-dark) 16px 32px);
+    background-size:200% 100%;
+    width:100%;
+  }
+  .progress-bar.done{ width:100%; background:var(--teal); animation:none; }
+  .progress-bar.idle-stop{ width:100%; background:var(--steel); animation:none; }
+  @keyframes stripe-move{ from{ background-position:0 0; } to{ background-position:64px 0; } }
+  @media (prefers-reduced-motion: reduce){
+    .progress-bar.running{ animation:none; background:var(--rust); }
+  }
+
+  .status-text{
+    margin-top:10px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+
+  /* ---- log panel ---- */
+  .log-panel{
+    margin-top:20px;
+    background:var(--ink);
+    border-radius:7px;
+    max-height:230px;
+    overflow-y:auto;
+    padding:6px 0;
+  }
+  .log-head{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:#8a8472;
+    padding:8px 16px 6px;
+    position:sticky;
+    top:0;
+    background:var(--ink);
+  }
+  .log-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:var(--mono);
+    font-size:12.5px;
+    padding:5px 16px;
+    border-top:1px solid #322f28;
+    color:#d8d2c0;
+  }
+  .log-row.is-error{ color:#e0a796; }
+  .log-old .strike{ color:#e07a52; text-decoration: line-through; text-decoration-color:#e07a52; text-decoration-thickness:1.5px; opacity:.85; }
+  .log-arrow{ color:#7a7563; flex-shrink:0; }
+  .log-new{ color:#9fd6c6; font-weight:500; }
+  .log-folder{ color:#6f6a59; font-size:11px; margin-left:auto; flex-shrink:0; padding-left:8px; }
+
+  /* ---- zip section ---- */
+  .zip-section{ margin-top:26px; }
+  .zip-status{
+    margin:10px 0 0;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-soft);
+    text-align:center;
+  }
+
+  /* ---- banners ---- */
+  .banner{
+    margin-top:18px;
+    border-left:3px solid var(--rust);
+    background:rgba(188,75,44,0.08);
+    padding:11px 14px;
+    font-size:13px;
+    line-height:1.5;
+    color:#5a2c1b;
+    border-radius:0 5px 5px 0;
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .banner button{
+    background:none; border:none; cursor:pointer; color:#5a2c1b;
+    font-size:15px; line-height:1; padding:0 2px; opacity:.6;
+  }
+  .banner button:hover{ opacity:1; }
+  .banner.support{ border-left-color:var(--steel); background:rgba(60,69,78,0.07); color:var(--ink-soft); }
+
+  footer.note{
+    margin-top:22px;
+    font-size:12px;
+    color:var(--ink-faint);
+    line-height:1.6;
+    border-top:1px solid var(--line);
+    padding-top:16px;
+  }
+
+  @media (max-width:480px){
+    .card{ padding:28px 22px 26px; }
+    .stats{ flex-wrap:wrap; }
+    .stat{ flex:1 1 50%; border-right:1px solid var(--line); }
+    .stat:nth-child(2){ border-right:none; }
+    .stat:nth-child(odd){ border-bottom:1px solid var(--line); }
+    .control-row{ flex-direction:column; align-items:stretch; }
+    .action-buttons{ justify-content:stretch; }
+    .action-buttons .btn{ flex:1; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="card">
+
+    <p class="eyebrow"><span class="dot"></span>FILE TOOLS · BATCH RENAME</p>
+    <h1>Strip the Zeros.</h1>
+    <p class="lede">
+      Point this at a folder full of numbered files — <code>0057.jpg</code>, <code>00012.png</code> — and get clean names back: <code>57.jpg</code>, <code>12.png</code>. It works through every subfolder, then can pack each one into its own zip.
+    </p>
+
+    <div id="unsupportedBanner" class="banner support hidden">
+      <span>This tool needs direct folder access, which only Chrome or Edge (desktop) currently support. Open this page in one of those browsers to continue.</span>
+    </div>
+
+    <div id="errorBanner" class="banner hidden">
+      <span id="errorText"></span>
+      <button id="errorDismiss" aria-label="Dismiss">✕</button>
+    </div>
+
+    <div id="dropzone" class="dropzone">
+      <svg class="dz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>
+      </svg>
+      <p class="dz-text">Drag and drop the parent folder here</p>
+      <p class="dz-or">or</p>
+      <button id="chooseBtn" class="btn btn-choose">Choose Folder</button>
+    </div>
+
+    <div class="control-row">
+      <div id="folderChip" class="folder-chip hidden">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2.5h8a2 2 0 0 1 2 2V17a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/></svg>
+        <span class="chip-name" id="folderNameText"></span>
+      </div>
+      <div class="action-buttons">
+        <button id="startBtn" class="btn btn-start" disabled>Start Converting</button>
+        <button id="stopBtn" class="btn btn-stop hidden">Stop</button>
+        <button id="refreshBtn" class="btn btn-refresh hidden">Refresh</button>
+      </div>
+    </div>
+
+    <div id="statsPanel" class="stats hidden">
+      <div class="stat"><span class="num" id="statScanned">0</span><span class="lbl">Scanned</span></div>
+      <div class="stat"><span class="num" id="statMatched">0</span><span class="lbl">Matched</span></div>
+      <div class="stat"><span class="num" id="statConverted">0</span><span class="lbl">Converted</span></div>
+      <div class="stat"><span class="num" id="statFolders">0</span><span class="lbl">Folders</span></div>
+    </div>
+
+    <div id="progressWrap" class="progress-wrap hidden">
+      <div id="progressBar" class="progress-bar"></div>
+    </div>
+    <p id="statusText" class="status-text hidden">Idle.</p>
+
+    <div id="logPanel" class="log-panel hidden">
+      <div class="log-head">Activity Log</div>
+      <div id="logBody"></div>
+    </div>
+
+    <div id="zipSection" class="zip-section hidden">
+      <button id="zipBtn" class="btn btn-zip">Convert into ZIP files</button>
+      <p id="zipStatus" class="zip-status"></p>
+    </div>
+
+    <footer class="note">
+      Works on Chrome or Edge (desktop), version 114+. Each child folder gets converted in place — files are renamed directly on disk, nothing is uploaded anywhere. Re-running Start is safe: files that are already clean are simply skipped.
+    </footer>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- element refs ----------
+  const dropzone = document.getElementById('dropzone');
+  const chooseBtn = document.getElementById('chooseBtn');
+  const startBtn = document.getElementById('startBtn');
+  const stopBtn = document.getElementById('stopBtn');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const folderChip = document.getElementById('folderChip');
+  const folderNameText = document.getElementById('folderNameText');
+  const statsPanel = document.getElementById('statsPanel');
+  const statScanned = document.getElementById('statScanned');
+  const statMatched = document.getElementById('statMatched');
+  const statConverted = document.getElementById('statConverted');
+  const statFolders = document.getElementById('statFolders');
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const statusText = document.getElementById('statusText');
+  const logPanel = document.getElementById('logPanel');
+  const logBody = document.getElementById('logBody');
+  const zipSection = document.getElementById('zipSection');
+  const zipBtn = document.getElementById('zipBtn');
+  const zipStatus = document.getElementById('zipStatus');
+  const unsupportedBanner = document.getElementById('unsupportedBanner');
+  const errorBanner = document.getElementById('errorBanner');
+  const errorText = document.getElementById('errorText');
+  const errorDismiss = document.getElementById('errorDismiss');
+
+  // ---------- state ----------
+  let rootHandle = null;
+  let running = false;
+  let stopRequested = false;
+  let counts = { scanned:0, matched:0, converted:0, folders:0 };
+  const LOG_CAP = 300;
+
+  // ---------- support check ----------
+  const supported = typeof window.showDirectoryPicker === 'function';
+  if(!supported){
+    unsupportedBanner.classList.remove('hidden');
+    chooseBtn.disabled = true;
+  }
+
+  // ---------- helpers ----------
+  function showError(msg){
+    errorText.textContent = msg;
+    errorBanner.classList.remove('hidden');
+  }
+  errorDismiss.addEventListener('click', () => errorBanner.classList.add('hidden'));
+
+  function setStatus(msg){ statusText.textContent = msg; statusText.classList.remove('hidden'); }
+
+  function updateStatsUI(){
+    statScanned.textContent = counts.scanned;
+    statMatched.textContent = counts.matched;
+    statConverted.textContent = counts.converted;
+    statFolders.textContent = counts.folders;
+  }
+
+  function resetCounts(){
+    counts = { scanned:0, matched:0, converted:0, folders:0 };
+    updateStatsUI();
+    logBody.innerHTML = '';
+  }
+
+  function appendLog(oldName, newName, kind, detail, folderLabel){
+    const row = document.createElement('div');
+    row.className = 'log-row' + (kind === 'error' ? ' is-error' : '');
+
+    if(kind === 'ok'){
+      const dot = oldName.lastIndexOf('.');
+      const hasExt = dot > 0;
+      const base = hasExt ? oldName.slice(0,dot) : oldName;
+      const ext = hasExt ? oldName.slice(dot) : '';
+      const zerosMatch = base.match(/^0+/);
+      const zeros = zerosMatch ? zerosMatch[0] : '';
+      const rest = base.slice(zeros.length);
+
+      const oldSpan = document.createElement('span');
+      oldSpan.className = 'log-old';
+      const strike = document.createElement('span');
+      strike.className = 'strike';
+      strike.textContent = zeros;
+      oldSpan.appendChild(strike);
+      oldSpan.appendChild(document.createTextNode(rest + ext));
+
+      const arrow = document.createElement('span');
+      arrow.className = 'log-arrow';
+      arrow.textContent = '→';
+
+      const newSpan = document.createElement('span');
+      newSpan.className = 'log-new';
+      newSpan.textContent = newName;
+
+      row.appendChild(oldSpan);
+      row.appendChild(arrow);
+      row.appendChild(newSpan);
+    } else {
+      row.textContent = '⚠ ' + oldName + ' — ' + detail;
+    }
+
+    if(folderLabel){
+      const f = document.createElement('span');
+      f.className = 'log-folder';
+      f.textContent = folderLabel;
+      row.appendChild(f);
+    }
+
+    logBody.appendChild(row);
+    if(logBody.children.length > LOG_CAP){
+      logBody.removeChild(logBody.firstChild);
+    }
+    logPanel.scrollTop = logPanel.scrollHeight;
+  }
+
+  async function ensureWritePermission(handle){
+    const opts = { mode: 'readwrite' };
+    try{
+      if((await handle.queryPermission(opts)) === 'granted') return true;
+      if((await handle.requestPermission(opts)) === 'granted') return true;
+    } catch(e){ /* fall through */ }
+    return false;
+  }
+
+  // ---------- naming logic ----------
+  function computeNewName(filename){
+    const dot = filename.lastIndexOf('.');
+    const hasExt = dot > 0;
+    const base = hasExt ? filename.slice(0, dot) : filename;
+    const ext = hasExt ? filename.slice(dot) : '';
+    if(!/^\d+$/.test(base)) return null;
+    if(base.length <= 1) return null;
+    if(base[0] !== '0') return null;
+    const stripped = String(parseInt(base, 10));
+    return stripped + ext;
+  }
+
+  // ---------- UI state machine ----------
+  function setUIState(state){
+    switch(state){
+      case 'idle':
+        dropzone.classList.remove('hidden');
+        folderChip.classList.add('hidden');
+        startBtn.disabled = true;
+        startBtn.textContent = 'Start Converting';
+        stopBtn.classList.add('hidden');
+        refreshBtn.classList.add('hidden');
+        statsPanel.classList.add('hidden');
+        progressWrap.classList.add('hidden');
+        statusText.classList.add('hidden');
+        logPanel.classList.add('hidden');
+        zipSection.classList.add('hidden');
+        zipBtn.disabled = false;
+        zipBtn.textContent = 'Convert into ZIP files';
+        zipStatus.textContent = '';
+        break;
+      case 'selected':
+        dropzone.classList.add('hidden');
+        folderChip.classList.remove('hidden');
+        startBtn.disabled = false;
+        startBtn.textContent = 'Start Converting';
+        stopBtn.classList.add('hidden');
+        refreshBtn.classList.add('hidden');
+        setStatus('Folder selected. Ready when you are.');
+        break;
+      case 'running':
+        startBtn.disabled = true;
+        startBtn.textContent = 'Converting…';
+        stopBtn.classList.remove('hidden');
+        stopBtn.disabled = false;
+        refreshBtn.classList.add('hidden');
+        statsPanel.classList.remove('hidden');
+        progressWrap.classList.remove('hidden');
+        progressBar.className = 'progress-bar running';
+        logPanel.classList.remove('hidden');
+        zipSection.classList.add('hidden');
+        setStatus('Scanning and renaming…');
+        break;
+      case 'stopped':
+        startBtn.disabled = false;
+        startBtn.textContent = 'Start Converting';
+        stopBtn.classList.add('hidden');
+        refreshBtn.classList.remove('hidden');
+        progressBar.className = 'progress-bar idle-stop';
+        setStatus('Stopped. ' + counts.converted + ' file(s) converted before stopping. Click Start to resume, or Refresh to choose a new folder.');
+        if(counts.converted > 0){ zipSection.classList.remove('hidden'); }
+        break;
+      case 'completed':
+        startBtn.disabled = true;
+        startBtn.textContent = 'All Done ✓';
+        stopBtn.classList.add('hidden');
+        refreshBtn.classList.remove('hidden');
+        progressBar.className = 'progress-bar done';
+        setStatus(counts.matched === 0
+          ? 'Finished. No leading-zero file names were found.'
+          : 'Finished. ' + counts.converted + ' of ' + counts.matched + ' matching file(s) converted.');
+        if(counts.converted > 0){ zipSection.classList.remove('hidden'); }
+        break;
+    }
+  }
+
+  // ---------- folder selection ----------
+  async function selectFolder(handle){
+    const ok = await ensureWritePermission(handle);
+    if(!ok){
+      showError('Permission was not granted, so files can\u2019t be renamed or zipped. Please allow read/write access and try again.');
+      return;
+    }
+    rootHandle = handle;
+    folderNameText.textContent = handle.name;
+    resetCounts();
+    setUIState('selected');
+  }
+
+  chooseBtn.addEventListener('click', async () => {
+    if(!supported) return;
+    try{
+      const handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      await selectFolder(handle);
+    } catch(err){
+      if(err && err.name === 'AbortError') return; // user cancelled, no message needed
+      handlePickerError(err);
+    }
+  });
+
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if(!supported){
+      showError('Direct folder access isn\u2019t available in this browser. Use Chrome or Edge on desktop.');
+      return;
+    }
+    const item = e.dataTransfer.items && e.dataTransfer.items[0];
+    if(!item){ return; }
+    if(typeof item.getAsFileSystemHandle !== 'function'){
+      showError('Your browser doesn\u2019t support dropped-folder access. Use the Choose Folder button instead.');
+      return;
+    }
+    try{
+      const handle = await item.getAsFileSystemHandle();
+      if(handle.kind !== 'directory'){
+        showError('That\u2019s a file, not a folder. Drop the parent folder itself.');
+        return;
+      }
+      await selectFolder(handle);
+    } catch(err){
+      handlePickerError(err);
+    }
+  });
+
+  function handlePickerError(err){
+    const name = err && err.name;
+    if(name === 'SecurityError' || name === 'NotAllowedError'){
+      showError('The folder picker was blocked. This usually happens when the page is running inside an embedded preview. Open this tool in its own browser tab (Chrome or Edge) and try again.');
+    } else {
+      showError('Couldn\u2019t access that folder: ' + (err && err.message ? err.message : 'unknown error') + '.');
+    }
+  }
+
+  // ---------- rename engine ----------
+  function isStaleStateError(err){
+    if(!err) return false;
+    if(err.name === 'InvalidStateError') return true;
+    return /state had changed|cached in an interface object/i.test(err.message || '');
+  }
+
+  // Some Android storage providers briefly disagree with themselves about a
+  // folder's contents right after it's been written to or deleted from —
+  // any call made in that window can throw "state had changed since it was
+  // read from disk" even though the handle itself is perfectly valid a
+  // moment later. Retrying the same operation after a short pause works
+  // around that instead of failing the whole conversion.
+  async function withStaleRetry(fn, attempts){
+    attempts = attempts || 4;
+    let lastErr;
+    for(let i = 0; i < attempts; i++){
+      try{
+        return await fn();
+      } catch(err){
+        lastErr = err;
+        if(!isStaleStateError(err) || i === attempts - 1) throw err;
+        await new Promise(r => setTimeout(r, 150 * (i + 1)));
+      }
+    }
+    throw lastErr;
+  }
+
+  async function safeRemoveEntry(dirHandle, name){
+    await withStaleRetry(async () => {
+      try{
+        await dirHandle.removeEntry(name);
+      } catch(err){
+        if(err && err.name === 'NotFoundError') return; // already gone — fine
+        throw err;
+      }
+    });
+  }
+
+  async function filesAreIdentical(fileA, fileB){
+    if(fileA.size !== fileB.size) return false;
+    const [bufA, bufB] = await Promise.all([fileA.arrayBuffer(), fileB.arrayBuffer()]);
+    const a = new Uint8Array(bufA), b = new Uint8Array(bufB);
+    for(let i = 0; i < a.length; i++){
+      if(a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
+  async function renameFile(dirHandle, fileHandle, oldName, newName){
+    let existingHandle = null;
+    try{ existingHandle = await withStaleRetry(() => dirHandle.getFileHandle(newName)); } catch(e){ existingHandle = null; }
+    let overwriteStub = false;
+
+    if(existingHandle){
+      // A file with the target name is already here. This can be a genuine
+      // second file that happens to share digits, a leftover from an
+      // earlier run where the copy finished but deleting the zero-padded
+      // original failed (byte-for-byte identical), or a zero-byte stub left
+      // behind when a previous attempt's write itself got interrupted by
+      // one of these provider hiccups. The first two are handled here; a
+      // real conflict with actual content in it is left alone untouched.
+      const oldFile = await fileHandle.getFile();
+      const existingFile = await existingHandle.getFile();
+      if(existingFile.size === 0 && oldFile.size > 0){
+        overwriteStub = true; // our own failed leftover — safe to overwrite
+      } else {
+        const identical = await filesAreIdentical(oldFile, existingFile);
+        if(identical){
+          await safeRemoveEntry(dirHandle, oldName);
+          return 'duplicate-cleaned';
+        }
+        throw new Error('a different file named ' + newName + ' already exists here — left both untouched, please check manually');
+      }
+    }
+
+    if(typeof fileHandle.move === 'function' && !existingHandle){
+      try{
+        await fileHandle.move(newName);
+        return 'moved';
+      } catch(moveErr){
+        // Some storage backends (notably Android folder providers) expose
+        // move() but reject every call. Fall through to the manual
+        // copy-then-delete approach below instead of failing the rename.
+      }
+    }
+
+    await withStaleRetry(async () => {
+      const file = await fileHandle.getFile();
+      const buffer = await file.arrayBuffer();
+      const newHandle = await dirHandle.getFileHandle(newName, { create: true });
+      const writable = await newHandle.createWritable();
+      await writable.write(buffer);
+      await writable.close();
+    });
+
+    try{
+      await safeRemoveEntry(dirHandle, oldName);
+    } catch(delErr){
+      throw new Error('copied to ' + newName + ' but couldn\u2019t remove the original ' + oldName + ' (' + delErr.message + ') \u2014 re-run to finish cleaning up');
+    }
+    return overwriteStub ? 'stub-overwritten' : 'copied';
+  }
+
+  async function processDirectory(dirHandle, label){
+    if(stopRequested) return;
+    counts.folders++; updateStatsUI();
+
+    // Collect names only on the first pass. Holding onto handles from a
+    // single bulk listing and using them later is what causes "state had
+    // changed since it was read from disk" errors on some mobile storage
+    // providers once the folder has been mutated mid-scan — so each name
+    // gets a freshly fetched handle right before it's actually used.
+    const fileNames = [];
+    const dirNames = [];
+    for await (const [name, entry] of dirHandle.entries()){
+      if(entry.kind === 'file') fileNames.push(name);
+      else if(entry.kind === 'directory') dirNames.push(name);
+    }
+
+    for(const name of fileNames){
+      if(stopRequested) break;
+      counts.scanned++; updateStatsUI();
+      const newName = computeNewName(name);
+      if(newName && newName !== name){
+        counts.matched++; updateStatsUI();
+        try{
+          const freshHandle = await withStaleRetry(() => dirHandle.getFileHandle(name));
+          await renameFile(dirHandle, freshHandle, name, newName);
+          counts.converted++; updateStatsUI();
+          appendLog(name, newName, 'ok', null, label);
+        } catch(err){
+          appendLog(name, newName, 'error', err.message, label);
+        }
+      }
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    for(const name of dirNames){
+      if(stopRequested) break;
+      try{
+        const freshDirHandle = await dirHandle.getDirectoryHandle(name);
+        await processDirectory(freshDirHandle, name);
+      } catch(err){
+        appendLog(name, name, 'error', 'couldn\u2019t open this subfolder: ' + err.message, label);
+      }
+    }
+  }
+
+  startBtn.addEventListener('click', async () => {
+    if(running || !rootHandle) return;
+    running = true;
+    stopRequested = false;
+    setUIState('running');
+    try{
+      await processDirectory(rootHandle, rootHandle.name);
+    } catch(err){
+      showError('Conversion stopped early: ' + (err && err.message ? err.message : 'unknown error') + '.');
+    }
+    running = false;
+    setUIState(stopRequested ? 'stopped' : 'completed');
+  });
+
+  stopBtn.addEventListener('click', () => {
+    stopRequested = true;
+    stopBtn.disabled = true;
+  });
+
+  refreshBtn.addEventListener('click', () => {
+    rootHandle = null;
+    running = false;
+    stopRequested = false;
+    resetCounts();
+    setUIState('idle');
+  });
+
+  // ---------- zip engine ----------
+  let foldersZipped = 0;
+
+  async function zipFolderContents(dirHandle){
+    const fileEntries = [];
+    const dirEntries = [];
+    for await (const [name, entry] of dirHandle.entries()){
+      if(entry.kind === 'file' && !name.toLowerCase().endsWith('.zip')) fileEntries.push([name, entry]);
+      else if(entry.kind === 'directory') dirEntries.push([name, entry]);
+    }
+
+    if(fileEntries.length > 0){
+      const zip = new JSZip();
+      for(const [name, entry] of fileEntries){
+        const file = await entry.getFile();
+        zip.file(name, await file.arrayBuffer());
+      }
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const zipName = dirHandle.name + '.zip';
+      await withStaleRetry(async () => {
+        const zipHandle = await dirHandle.getFileHandle(zipName, { create: true });
+        const writable = await zipHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      });
+      foldersZipped++;
+      zipStatus.textContent = 'Zipped ' + dirHandle.name + ' (' + fileEntries.length + ' file' + (fileEntries.length===1?'':'s') + ') — ' + foldersZipped + ' folder' + (foldersZipped===1?'':'s') + ' done so far.';
+    }
+
+    for(const [, entry] of dirEntries){
+      await zipFolderContents(entry);
+    }
+  }
+
+  zipBtn.addEventListener('click', async () => {
+    if(!rootHandle) return;
+    if(typeof JSZip === 'undefined'){
+      showError('The zip library couldn\u2019t load — check your connection and reload the page.');
+      return;
+    }
+    zipBtn.disabled = true;
+    zipBtn.textContent = 'Zipping…';
+    foldersZipped = 0;
+    zipStatus.textContent = 'Working through folders…';
+    try{
+      await zipFolderContents(rootHandle);
+      zipBtn.textContent = 'ZIP files created ✓';
+      zipStatus.textContent = foldersZipped > 0
+        ? foldersZipped + ' folder' + (foldersZipped===1?'':'s') + ' zipped, saved alongside the converted files.'
+        : 'No files found to zip.';
+    } catch(err){
+      showError('Zipping failed: ' + (err && err.message ? err.message : 'unknown error') + '.');
+      zipBtn.disabled = false;
+      zipBtn.textContent = 'Convert into ZIP files';
+    }
+  });
+
+  // ---------- init ----------
+  setUIState('idle');
+})();
+</script>
+</body>
+</html>
