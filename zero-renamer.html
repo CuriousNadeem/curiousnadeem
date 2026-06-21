@@ -394,7 +394,7 @@
     </div>
 
     <footer class="note">
-      Works on Chrome or Edge (desktop), version 15+. Each child folder gets converted in place — files are renamed directly on disk, nothing is uploaded anywhere. Re-running Start is safe: files that are already clean are simply skipped.
+      Works on Chrome or Edge (desktop), version 114+. Each child folder gets converted in place — files are renamed directly on disk, nothing is uploaded anywhere. Re-running Start is safe: files that are already clean are simply skipped.
     </footer>
 
   </div>
@@ -663,150 +663,54 @@
   }
 
   // ---------- rename engine ----------
-  function isStaleStateError(err){
-    if(!err) return false;
-    if(err.name === 'InvalidStateError') return true;
-    return /state had changed|cached in an interface object/i.test(err.message || '');
-  }
-
-  // Some Android storage providers briefly disagree with themselves about a
-  // folder's contents right after it's been written to or deleted from —
-  // any call made in that window can throw "state had changed since it was
-  // read from disk" even though the handle itself is perfectly valid a
-  // moment later. Retrying the same operation after a short pause works
-  // around that instead of failing the whole conversion.
-  async function withStaleRetry(fn, attempts){
-    attempts = attempts || 4;
-    let lastErr;
-    for(let i = 0; i < attempts; i++){
-      try{
-        return await fn();
-      } catch(err){
-        lastErr = err;
-        if(!isStaleStateError(err) || i === attempts - 1) throw err;
-        await new Promise(r => setTimeout(r, 150 * (i + 1)));
-      }
-    }
-    throw lastErr;
-  }
-
-  async function safeRemoveEntry(dirHandle, name){
-    await withStaleRetry(async () => {
-      try{
-        await dirHandle.removeEntry(name);
-      } catch(err){
-        if(err && err.name === 'NotFoundError') return; // already gone — fine
-        throw err;
-      }
-    });
-  }
-
-  async function filesAreIdentical(fileA, fileB){
-    if(fileA.size !== fileB.size) return false;
-    const [bufA, bufB] = await Promise.all([fileA.arrayBuffer(), fileB.arrayBuffer()]);
-    const a = new Uint8Array(bufA), b = new Uint8Array(bufB);
-    for(let i = 0; i < a.length; i++){
-      if(a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-
   async function renameFile(dirHandle, fileHandle, oldName, newName){
-    let existingHandle = null;
-    try{ existingHandle = await withStaleRetry(() => dirHandle.getFileHandle(newName)); } catch(e){ existingHandle = null; }
-    let overwriteStub = false;
+    let targetExists = false;
+    try{ await dirHandle.getFileHandle(newName); targetExists = true; } catch(e){ targetExists = false; }
+    if(targetExists){ throw new Error('a file named ' + newName + ' already exists here, skipped'); }
 
-    if(existingHandle){
-      // A file with the target name is already here. This can be a genuine
-      // second file that happens to share digits, a leftover from an
-      // earlier run where the copy finished but deleting the zero-padded
-      // original failed (byte-for-byte identical), or a zero-byte stub left
-      // behind when a previous attempt's write itself got interrupted by
-      // one of these provider hiccups. The first two are handled here; a
-      // real conflict with actual content in it is left alone untouched.
-      const oldFile = await fileHandle.getFile();
-      const existingFile = await existingHandle.getFile();
-      if(existingFile.size === 0 && oldFile.size > 0){
-        overwriteStub = true; // our own failed leftover — safe to overwrite
-      } else {
-        const identical = await filesAreIdentical(oldFile, existingFile);
-        if(identical){
-          await safeRemoveEntry(dirHandle, oldName);
-          return 'duplicate-cleaned';
-        }
-        throw new Error('a different file named ' + newName + ' already exists here — left both untouched, please check manually');
-      }
+    if(typeof fileHandle.move === 'function'){
+      await fileHandle.move(newName);
+      return;
     }
-
-    if(typeof fileHandle.move === 'function' && !existingHandle){
-      try{
-        await fileHandle.move(newName);
-        return 'moved';
-      } catch(moveErr){
-        // Some storage backends (notably Android folder providers) expose
-        // move() but reject every call. Fall through to the manual
-        // copy-then-delete approach below instead of failing the rename.
-      }
-    }
-
-    await withStaleRetry(async () => {
-      const file = await fileHandle.getFile();
-      const buffer = await file.arrayBuffer();
-      const newHandle = await dirHandle.getFileHandle(newName, { create: true });
-      const writable = await newHandle.createWritable();
-      await writable.write(buffer);
-      await writable.close();
-    });
-
-    try{
-      await safeRemoveEntry(dirHandle, oldName);
-    } catch(delErr){
-      throw new Error('copied to ' + newName + ' but couldn\u2019t remove the original ' + oldName + ' (' + delErr.message + ') \u2014 re-run to finish cleaning up');
-    }
-    return overwriteStub ? 'stub-overwritten' : 'copied';
+    const file = await fileHandle.getFile();
+    const buffer = await file.arrayBuffer();
+    const newHandle = await dirHandle.getFileHandle(newName, { create: true });
+    const writable = await newHandle.createWritable();
+    await writable.write(buffer);
+    await writable.close();
+    await dirHandle.removeEntry(oldName);
   }
 
   async function processDirectory(dirHandle, label){
     if(stopRequested) return;
     counts.folders++; updateStatsUI();
 
-    // Collect names only on the first pass. Holding onto handles from a
-    // single bulk listing and using them later is what causes "state had
-    // changed since it was read from disk" errors on some mobile storage
-    // providers once the folder has been mutated mid-scan — so each name
-    // gets a freshly fetched handle right before it's actually used.
-    const fileNames = [];
-    const dirNames = [];
-    for await (const [name, entry] of dirHandle.entries()){
-      if(entry.kind === 'file') fileNames.push(name);
-      else if(entry.kind === 'directory') dirNames.push(name);
-    }
+    const entries = [];
+    for await (const pair of dirHandle.entries()){ entries.push(pair); }
 
-    for(const name of fileNames){
+    for(const [name, entry] of entries){
       if(stopRequested) break;
-      counts.scanned++; updateStatsUI();
-      const newName = computeNewName(name);
-      if(newName && newName !== name){
-        counts.matched++; updateStatsUI();
-        try{
-          const freshHandle = await withStaleRetry(() => dirHandle.getFileHandle(name));
-          await renameFile(dirHandle, freshHandle, name, newName);
-          counts.converted++; updateStatsUI();
-          appendLog(name, newName, 'ok', null, label);
-        } catch(err){
-          appendLog(name, newName, 'error', err.message, label);
+      if(entry.kind === 'file'){
+        counts.scanned++; updateStatsUI();
+        const newName = computeNewName(name);
+        if(newName && newName !== name){
+          counts.matched++; updateStatsUI();
+          try{
+            await renameFile(dirHandle, entry, name, newName);
+            counts.converted++; updateStatsUI();
+            appendLog(name, newName, 'ok', null, label);
+          } catch(err){
+            appendLog(name, newName, 'error', err.message, label);
+          }
         }
+        if(counts.scanned % 25 === 0){ await new Promise(r => setTimeout(r, 0)); }
       }
-      await new Promise(r => setTimeout(r, 0));
     }
 
-    for(const name of dirNames){
+    for(const [name, entry] of entries){
       if(stopRequested) break;
-      try{
-        const freshDirHandle = await dirHandle.getDirectoryHandle(name);
-        await processDirectory(freshDirHandle, name);
-      } catch(err){
-        appendLog(name, name, 'error', 'couldn\u2019t open this subfolder: ' + err.message, label);
+      if(entry.kind === 'directory'){
+        await processDirectory(entry, name);
       }
     }
   }
@@ -857,12 +761,10 @@
       }
       const blob = await zip.generateAsync({ type: 'blob' });
       const zipName = dirHandle.name + '.zip';
-      await withStaleRetry(async () => {
-        const zipHandle = await dirHandle.getFileHandle(zipName, { create: true });
-        const writable = await zipHandle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-      });
+      const zipHandle = await dirHandle.getFileHandle(zipName, { create: true });
+      const writable = await zipHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
       foldersZipped++;
       zipStatus.textContent = 'Zipped ' + dirHandle.name + ' (' + fileEntries.length + ' file' + (fileEntries.length===1?'':'s') + ') — ' + foldersZipped + ' folder' + (foldersZipped===1?'':'s') + ' done so far.';
     }
