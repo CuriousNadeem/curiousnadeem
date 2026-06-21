@@ -663,15 +663,41 @@
   }
 
   // ---------- rename engine ----------
+  async function filesAreIdentical(fileA, fileB){
+    if(fileA.size !== fileB.size) return false;
+    const [bufA, bufB] = await Promise.all([fileA.arrayBuffer(), fileB.arrayBuffer()]);
+    const a = new Uint8Array(bufA), b = new Uint8Array(bufB);
+    for(let i = 0; i < a.length; i++){
+      if(a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
   async function renameFile(dirHandle, fileHandle, oldName, newName){
-    let targetExists = false;
-    try{ await dirHandle.getFileHandle(newName); targetExists = true; } catch(e){ targetExists = false; }
-    if(targetExists){ throw new Error('a file named ' + newName + ' already exists here, skipped'); }
+    let existingHandle = null;
+    try{ existingHandle = await dirHandle.getFileHandle(newName); } catch(e){ existingHandle = null; }
+
+    if(existingHandle){
+      // A file with the target name is already here. This can be a genuine
+      // second file that happens to share digits, or it can be a leftover
+      // from an earlier run where the copy succeeded but deleting the
+      // zero-padded original failed. Only clean it up automatically when
+      // the two files are byte-for-byte identical — otherwise leave both
+      // alone rather than risk losing data.
+      const oldFile = await fileHandle.getFile();
+      const existingFile = await existingHandle.getFile();
+      const identical = await filesAreIdentical(oldFile, existingFile);
+      if(identical){
+        await dirHandle.removeEntry(oldName);
+        return 'duplicate-cleaned';
+      }
+      throw new Error('a different file named ' + newName + ' already exists here — left both untouched, please check manually');
+    }
 
     if(typeof fileHandle.move === 'function'){
       try{
         await fileHandle.move(newName);
-        return;
+        return 'moved';
       } catch(moveErr){
         // Some storage backends (notably Android folder providers) expose
         // move() but reject every call. Fall through to the manual
@@ -687,40 +713,52 @@
     try{
       await dirHandle.removeEntry(oldName);
     } catch(delErr){
-      throw new Error('copied to ' + newName + ' but couldn\u2019t remove the original ' + oldName + ' (' + delErr.message + ')');
+      throw new Error('copied to ' + newName + ' but couldn\u2019t remove the original ' + oldName + ' (' + delErr.message + ') \u2014 re-run to finish cleaning up');
     }
+    return 'copied';
   }
 
   async function processDirectory(dirHandle, label){
     if(stopRequested) return;
     counts.folders++; updateStatsUI();
 
-    const entries = [];
-    for await (const pair of dirHandle.entries()){ entries.push(pair); }
-
-    for(const [name, entry] of entries){
-      if(stopRequested) break;
-      if(entry.kind === 'file'){
-        counts.scanned++; updateStatsUI();
-        const newName = computeNewName(name);
-        if(newName && newName !== name){
-          counts.matched++; updateStatsUI();
-          try{
-            await renameFile(dirHandle, entry, name, newName);
-            counts.converted++; updateStatsUI();
-            appendLog(name, newName, 'ok', null, label);
-          } catch(err){
-            appendLog(name, newName, 'error', err.message, label);
-          }
-        }
-        if(counts.scanned % 25 === 0){ await new Promise(r => setTimeout(r, 0)); }
-      }
+    // Collect names only on the first pass. Holding onto handles from a
+    // single bulk listing and using them later is what causes "state had
+    // changed since it was read from disk" errors on some mobile storage
+    // providers once the folder has been mutated mid-scan — so each name
+    // gets a freshly fetched handle right before it's actually used.
+    const fileNames = [];
+    const dirNames = [];
+    for await (const [name, entry] of dirHandle.entries()){
+      if(entry.kind === 'file') fileNames.push(name);
+      else if(entry.kind === 'directory') dirNames.push(name);
     }
 
-    for(const [name, entry] of entries){
+    for(const name of fileNames){
       if(stopRequested) break;
-      if(entry.kind === 'directory'){
-        await processDirectory(entry, name);
+      counts.scanned++; updateStatsUI();
+      const newName = computeNewName(name);
+      if(newName && newName !== name){
+        counts.matched++; updateStatsUI();
+        try{
+          const freshHandle = await dirHandle.getFileHandle(name);
+          await renameFile(dirHandle, freshHandle, name, newName);
+          counts.converted++; updateStatsUI();
+          appendLog(name, newName, 'ok', null, label);
+        } catch(err){
+          appendLog(name, newName, 'error', err.message, label);
+        }
+      }
+      await new Promise(r => setTimeout(r, 0));
+    }
+
+    for(const name of dirNames){
+      if(stopRequested) break;
+      try{
+        const freshDirHandle = await dirHandle.getDirectoryHandle(name);
+        await processDirectory(freshDirHandle, name);
+      } catch(err){
+        appendLog(name, name, 'error', 'couldn\u2019t open this subfolder: ' + err.message, label);
       }
     }
   }
